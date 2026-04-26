@@ -1,4 +1,4 @@
-; NetHack 3.6.7 (Educational Edition) - Inno Setup Script
+; NetHack 3.6.7 (Hearing Edition) - Inno Setup Script
 ; Builds a Release x64 installer without NetHackW.exe
 
 #define MyAppName      "NetHack 3.6.7"
