@@ -1,15 +1,24 @@
-﻿================================================================
-Hearing NetHack - Hearing Edition - 変更点一覧
-orig: nethack-367-src-original
-edu : nethack-367-src-edu
-生成日時: 2026-04-26 09:48:49
-================================================================
+﻿Hearing NetHack - Hearing Edition - 変更点一覧
+================================================
+NetHack 3.6.7 オリジナルからの変更点（unified diff 形式）
+Generated: 2026-04-26 22:38
+================================================
 
-----------------------------------------------------------------
-FILE: sys/winnt/nttty.c
-----------------------------------------------------------------
---- C:\xampp\htdocs\nethack\nethack\nethack-367-src-original\NetHack-3.6.7\sys\winnt\nttty.c	2023-02-16 06:52:57.000000000 +0900
-+++ C:\xampp\htdocs\nethack\nethack\nethack-367-src-edu\NetHack-3.6.7\sys\winnt\nttty.c	2026-04-26 08:13:02.625677100 +0900
+--- sys\winnt\nttty.c ---
+git.exe : warning: in the working copy of 'C:\xampp\htdocs\nethack\nethack\nethack-367-src-original\NetHack-3.6.7\sys\w
+innt\nttty.c', LF will be replaced by CRLF the next time Git touches it
+At line:27 char:17
++         $diff = & git diff --no-index -u $org $edu 2>&1
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+warning: in the working copy of 'C:\xampp\htdocs\nethack\nethack\nethack-367-src-edu\NetHack-3.6.7\sys\winnt\nttty.c', 
+LF will be replaced by CRLF the next time Git touches it
+diff --git "a/C:\\xampp\\htdocs\\nethack\\nethack\\nethack-367-src-original\\NetHack-3.6.7\\sys\\winnt\\nttty.c" "b/C:\\xampp\\htdocs\\nethack\\nethack\\nethack-367-src-edu\\NetHack-3.6.7\\sys\\winnt\\nttty.c"
+index 6cb01c9..7cb3de9 100644
+--- "a/C:\\xampp\\htdocs\\nethack\\nethack\\nethack-367-src-original\\NetHack-3.6.7\\sys\\winnt\\nttty.c"
++++ "b/C:\\xampp\\htdocs\\nethack\\nethack\\nethack-367-src-edu\\NetHack-3.6.7\\sys\\winnt\\nttty.c"
 @@ -15,7 +15,11 @@
  
  #ifdef WIN32
@@ -23,7 +32,7 @@ FILE: sys/winnt/nttty.c
  #include "winos.h"
  #include "hack.h"
  #include "wintty.h"
-@@ -78,6 +82,8 @@
+@@ -78,6 +82,8 @@ int FDECL(process_keystroke,
            (INPUT_RECORD *, boolean *, BOOLEAN_P numberpad, int portdebug));
  static void NDECL(init_ttycolor);
  static void NDECL(really_move_cursor);
@@ -32,7 +41,7 @@ FILE: sys/winnt/nttty.c
  static void NDECL(check_and_set_font);
  static boolean NDECL(check_font_widths);
  static void NDECL(set_known_good_console_font);
-@@ -453,6 +459,12 @@
+@@ -453,6 +459,12 @@ nttty_kbhit()
      return keyboard_handling.pNHkbhit(console.hConIn, &ir);
  }
  
@@ -45,7 +54,7 @@ FILE: sys/winnt/nttty.c
  int
  tgetch()
  {
-@@ -462,6 +474,9 @@
+@@ -462,6 +474,9 @@ tgetch()
      boolean numpad = iflags.num_pad;
  
      really_move_cursor();
@@ -55,7 +64,7 @@ FILE: sys/winnt/nttty.c
      if (iflags.debug_fuzzer)
          return randomkey();
  #ifdef QWERTZ_SUPPORT
-@@ -485,6 +500,7 @@
+@@ -485,6 +500,7 @@ int *x, *y, *mod;
      boolean numpad = iflags.num_pad;
  
      really_move_cursor();
@@ -63,7 +72,7 @@ FILE: sys/winnt/nttty.c
      if (iflags.debug_fuzzer)
          return randomkey();
  #ifdef QWERTZ_SUPPORT
-@@ -537,6 +553,661 @@
+@@ -537,6 +553,662 @@ really_move_cursor()
      SetConsoleCursorPosition(console.hConOut, console.cursor);
  }
  
@@ -449,6 +458,7 @@ FILE: sys/winnt/nttty.c
 +    if (n <= 0) return;
 +    req[n] = '\0';
 +    if (sscanf(req, "%7s %511s", method, path_buf) != 2) return;
++    { char *q = strchr(path_buf, '?'); if (q) *q = '\0'; }
 +
 +    body = strstr(req, "\r\n\r\n");
 +    body = body ? body + 4 : "";
@@ -725,7 +735,7 @@ FILE: sys/winnt/nttty.c
  void
  cmov(x, y)
  register int x, y;
-@@ -1855,6 +2526,8 @@
+@@ -1855,6 +2527,8 @@ void nethack_enter_nttty()
              set_altkeyhandling("ray");
          }
      }
@@ -735,66 +745,22 @@ FILE: sys/winnt/nttty.c
  #endif /* TTY_GRAPHICS */
  
 
-----------------------------------------------------------------
-FILE: sys/winnt/windmain.c
-----------------------------------------------------------------
---- C:\xampp\htdocs\nethack\nethack\nethack-367-src-original\NetHack-3.6.7\sys\winnt\windmain.c	2023-02-16 06:52:57.000000000 +0900
-+++ C:\xampp\htdocs\nethack\nethack\nethack-367-src-edu\NetHack-3.6.7\sys\winnt\windmain.c	2026-04-24 09:43:54.246757500 +0900
-@@ -952,8 +952,8 @@
-     }
- #else
-     DWORD length = GetModuleFileName((HANDLE) 0, path_buffer, MAX_PATH);
--    if (length == ERROR_INSUFFICIENT_BUFFER) error("Unable to get module name");
--    path_buffer[length] = '\0';
-+    if (length == 0) error("Unable to get module name");
-+    path_buffer[length < MAX_PATH ? length : MAX_PATH - 1] = '\0';
- #endif
+--- win\tty\wintty.c ---
+git.exe : warning: in the working copy of 'C:\xampp\htdocs\nethack\nethack\nethack-367-src-original\NetHack-3.6.7\win\t
+ty\wintty.c', LF will be replaced by CRLF the next time Git touches it
+At line:27 char:17
++         $diff = & git diff --no-index -u $org $edu 2>&1
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
  
-     char  * seperator = strrchr(path_buffer, PATH_SEPARATOR);
-
-----------------------------------------------------------------
-FILE: win/tty/getline.c
-----------------------------------------------------------------
---- C:\xampp\htdocs\nethack\nethack\nethack-367-src-original\NetHack-3.6.7\win\tty\getline.c	2023-02-16 06:52:57.000000000 +0900
-+++ C:\xampp\htdocs\nethack\nethack\nethack-367-src-edu\NetHack-3.6.7\win\tty\getline.c	2026-04-25 15:00:19.119828200 +0900
-@@ -13,6 +13,10 @@
- 
- #include "wintty.h"
- #include "func_tab.h"
-+#ifdef WIN32
-+extern void nttty_getlin_begin(void);
-+extern void nttty_getlin_end(void);
-+#endif
- 
- char morc = 0; /* tell the outside world what char you chose */
- STATIC_VAR boolean suppress_history;
-@@ -57,6 +61,9 @@
-     cw->flags &= ~WIN_STOP;
-     ttyDisplay->toplin = 3; /* special prompt state */
-     ttyDisplay->inread++;
-+#ifdef WIN32
-+    nttty_getlin_begin();
-+#endif
- 
-     /* issue the prompt */
-     custompline(OVERRIDE_MSGTYPE | SUPPRESS_HISTORY, "%s ", query);
-@@ -195,6 +202,9 @@
-     }
-     ttyDisplay->toplin = 2; /* nonempty, no --More-- required */
-     ttyDisplay->inread--;
-+#ifdef WIN32
-+    nttty_getlin_end();
-+#endif
-     clear_nhwindow(WIN_MESSAGE); /* clean up after ourselves */
- 
-     if (suppress_history) {
-
-----------------------------------------------------------------
-FILE: win/tty/wintty.c
-----------------------------------------------------------------
---- C:\xampp\htdocs\nethack\nethack\nethack-367-src-original\NetHack-3.6.7\win\tty\wintty.c	2023-02-16 06:52:57.000000000 +0900
-+++ C:\xampp\htdocs\nethack\nethack\nethack-367-src-edu\NetHack-3.6.7\win\tty\wintty.c	2026-04-25 20:55:34.772757000 +0900
-@@ -449,6 +449,11 @@
+warning: in the working copy of 'C:\xampp\htdocs\nethack\nethack\nethack-367-src-edu\NetHack-3.6.7\win\tty\wintty.c', L
+F will be replaced by CRLF the next time Git touches it
+diff --git "a/C:\\xampp\\htdocs\\nethack\\nethack\\nethack-367-src-original\\NetHack-3.6.7\\win\\tty\\wintty.c" "b/C:\\xampp\\htdocs\\nethack\\nethack\\nethack-367-src-edu\\NetHack-3.6.7\\win\\tty\\wintty.c"
+index d7ffec6..a395ca4 100644
+--- "a/C:\\xampp\\htdocs\\nethack\\nethack\\nethack-367-src-original\\NetHack-3.6.7\\win\\tty\\wintty.c"
++++ "b/C:\\xampp\\htdocs\\nethack\\nethack\\nethack-367-src-edu\\NetHack-3.6.7\\win\\tty\\wintty.c"
+@@ -449,6 +449,11 @@ char **argv UNUSED;
                                    (LI < 1 + ROWNO + 2) ? DISP_IN_GAME :
  #endif
                                     SET_IN_GAME);
@@ -806,771 +772,3 @@ FILE: win/tty/wintty.c
  }
  
  void
-
-----------------------------------------------------------------
-FILE: include/date.h
-----------------------------------------------------------------
---- C:\xampp\htdocs\nethack\nethack\nethack-367-src-original\NetHack-3.6.7\include\date.h	2026-04-24 06:45:56.598467100 +0900
-+++ C:\xampp\htdocs\nethack\nethack\nethack-367-src-edu\NetHack-3.6.7\include\date.h	2026-04-26 09:06:53.671924000 +0900
-@@ -1,6 +1,6 @@
- /* This source file is generated by 'makedefs'.  Do not edit. */
--#define BUILD_DATE "Fri Apr 24 06:45:56 2026"
--#define BUILD_TIME (1776980756UL)
-+#define BUILD_DATE "Sun Apr 26 09:06:53 2026"
-+#define BUILD_TIME (1777162013UL)
- 
- #define VERSION_NUMBER 0x03060700UL
- #define VERSION_FEATURES 0x00060000UL
-@@ -11,7 +11,7 @@
- 
- #define VERSION_STRING "3.6.7"
- #define VERSION_ID \
-- "Windows NetHack Version 3.6.7 - last build Fri Apr 24 06:45:56 2026."
-+ "Windows NetHack Version 3.6.7 - last build Sun Apr 26 09:06:53 2026."
- #define COPYRIGHT_BANNER_C \
-- "         Version 3.6.7 Windows, built Apr 24 06:45:56 2026."
-+ "         Version 3.6.7 Windows, built Apr 26 09:06:53 2026."
- 
-
-----------------------------------------------------------------
-FILE: bin/Debug/x64/nethack_viewer.html  [NEW FILE]
-----------------------------------------------------------------
-+ <!DOCTYPE html>
-+ <html>
-+ <head>
-+   <meta charset="UTF-8">
-+   <title>NetHack Screen</title>
-+   <style>
-+     * { box-sizing: border-box; margin: 0; padding: 0; }
-+     body { background: #0c0c0c; display: flex; flex-direction: column;
-+            align-items: flex-start; padding: 8px; }
-+     #screen { font-family: 'Courier New', Courier, monospace;
-+               font-size: 12px; line-height: 1;
-+               letter-spacing: 0; }
-+     .row { display: block; white-space: pre;
-+            line-height: 1; overflow: hidden; }
-+     #status { color: #555; font-family: monospace; font-size: 11px;
-+               margin-top: 6px; }
-+     .cursor { outline: 1px solid #fff; }
-+ 
-+     /* 辞書マッチ：下線 */
-+     .dm { text-decoration: underline; text-decoration-color: #adf;
-+           text-underline-offset: 2px; cursor: help; }
-+ 
-+     /* 辞書ツールチップ（最前面固定レイヤー） */
-+     #jp-tooltip { position: fixed; z-index: 9999;
-+                   background: #222; color: #adf; border: 1px solid #555;
-+                   padding: 4px 10px; font-family: sans-serif; font-size: 13px;
-+                   white-space: nowrap; pointer-events: none; display: none; }
-+ 
-+     /* 音声トグルボタン */
-+     #speech-btn { position: fixed; bottom: 16px; right: 16px;
-+                   background: #2a2a2a; color: #888; border: 1px solid #555;
-+                   font-size: 13px; padding: 4px 12px; cursor: pointer;
-+                   z-index: 1000; }
-+     #speech-btn.on  { color: #16c60c; border-color: #16c60c; }
-+     #speech-btn:hover { background: #3a3a3a; }
-+ 
-+     #bottom-left { position: fixed; bottom: 16px; left: 16px;
-+                    display: flex; gap: 6px; z-index: 1000; }
-+     #replay-btn, #readstatus-btn, #home-btn { background: #2a2a2a; color: #888; border: 1px solid #555;
-+                   font-size: 13px; padding: 4px 12px; cursor: pointer; }
-+     #replay-btn:hover:not(:disabled), #readstatus-btn:hover, #home-btn:hover { background: #3a3a3a; color: #fff; }
-+     #replay-btn:disabled { color: #444; border-color: #333; cursor: default; }
-+ 
-+     #dict-form { display: flex; flex-direction: column; align-items: flex-start;
-+                  gap: 6px; margin-top: 12px; }
-+     #dict-form input { background: #1e1e1e; color: #ccc; border: 1px solid #444;
-+                        font-family: monospace; font-size: 13px;
-+                        padding: 3px 6px; height: 26px; width: 400px; }
-+     #dict-form input::placeholder { color: #555; }
-+     #other-row { display: flex; gap: 6px; align-items: center; width: 400px; }
-+     #other-row input { flex: 1; width: auto; }
-+     #other-lang { background: #1e1e1e; color: #ccc; border: 1px solid #444;
-+                   font-family: monospace; font-size: 13px;
-+                   padding: 3px 4px; height: 26px; cursor: pointer; }
-+     #dict-btns { display: flex; align-items: center; gap: 6px; }
-+     #dict-btns button { background: #2a2a2a; color: #aaa; border: 1px solid #555;
-+                         font-size: 13px; padding: 0 10px; height: 26px;
-+                         cursor: pointer; }
-+     #dict-btns button:hover:not(:disabled) { background: #3a3a3a; color: #fff; }
-+     #dict-btns button:disabled { color: #444; border-color: #333; cursor: default; }
-+     #dict-msg { font-family: monospace; font-size: 12px; margin-left: 6px; }
-+     #import-label { background: #2a2a2a; color: #aaa; border: 1px solid #555;
-+                     font-size: 13px; padding: 0 10px; height: 26px; line-height: 26px;
-+                     cursor: pointer; display: inline-block; }
-+     #import-label:hover { background: #3a3a3a; color: #fff; }
-+   </style>
-+ </head>
-+ <body>
-+   <div id="jp-tooltip"></div>
-+   <div id="screen"></div>
-+   <div id="status">Waiting...</div>
-+   <div id="dict-form">
-+     <input id="en-input"    type="text" placeholder="English">
-+     <input id="ja-input"    type="text" placeholder="日本語">
-+     <div id="other-row">
-+       <input id="other-input" type="text" placeholder="Other">
-+       <select id="other-lang">
-+         <option value="ja-JP">日本語</option>
-+         <option value="en-US">English</option>
-+         <option value="zh-CN">中文(简体)</option>
-+         <option value="zh-TW">中文(繁體)</option>
-+         <option value="ko-KR">한국어</option>
-+         <option value="fr-FR">Français</option>
-+         <option value="de-DE">Deutsch</option>
-+         <option value="es-ES">Español</option>
-+         <option value="it-IT">Italiano</option>
-+         <option value="pt-BR">Português</option>
-+       </select>
-+     </div>
-+     <div id="dict-btns">
-+       <button id="reg-btn">Save</button>
-+       <button id="speak-btn" disabled>Read</button>
-+       <button id="export-btn">Export</button>
-+       <label id="import-label">Import<input id="import-input" type="file" accept=".json,application/json" style="display:none"></label>
-+       <button id="clear-dict-btn">Clear Dictionary</button>
-+       <span id="dict-msg"></span>
-+     </div>
-+   </div>
-+   <div id="bottom-left">
-+     <button id="replay-btn">Read Again</button>
-+     <button id="readstatus-btn">Read Status</button>
-+     <button id="home-btn">Home</button>
-+   </div>
-+   <button id="speech-btn">Sound ON</button>
-+ 
-+   <script>
-+     const SERVER = 'http://localhost:18080'; /* nethack.exe built-in HTTP server */
-+ 
-+     const PAL = [
-+       '#0c0c0c','#0037da','#13a10e','#3a96dd',
-+       '#c50f1f','#881798','#c19c00','#cccccc',
-+       '#767676','#3b78ff','#16c60c','#61d6d6',
-+       '#e74856','#b4009e','#f9f1a5','#f2f2f2'
-+     ];
-+ 
-+     const POLL_MS = 400;
-+     let lastText    = '';
-+     let lastMsg     = '';   /* 前回の行0テキスト（読み上げ重複防止） */
-+     let lastData    = null; /* 最後にレンダリングした画面データ */
-+     let speechOn    = false;
-+     let dictCache   = {};
-+     let dictKeys    = [];   /* sorted longest-first */
-+ 
-+     /* ---- Web Speech API ---- */
-+ 
-+     /* Chrome は getVoices() が非同期。voiceschanged 後に取得する。 */
-+     let voices = [];
-+     function loadVoices() { voices = window.speechSynthesis.getVoices(); }
-+     if (window.speechSynthesis) {
-+       loadVoices();
-+       window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
-+     }
-+ 
-+     /* 言語コードに最適なボイスを選ぶ（完全一致→前方一致→null） */
-+     function findVoice(lang) {
-+       const lc = lang.toLowerCase();
-+       return voices.find(v => v.lang.toLowerCase() === lc)
-+           || voices.find(v => v.lang.toLowerCase().startsWith(lc.slice(0, 2)))
-+           || null;
-+     }
-+ 
-+     /* parts = [{text, lang} | {pause, ms}] を順番に発話。
-+      * {pause: true, ms: N} は N ミリ秒待ってから次へ進む。
-+      * 新しい speakSequential 呼び出し時に古いタイマーを世代番号で無効化する。 */
-+     let speakGen = 0;
-+     function speakSequential(parts) {
-+       if (!window.speechSynthesis) return;
-+       window.speechSynthesis.cancel();
-+       const gen = ++speakGen;
-+       function next(i) {
-+         if (gen !== speakGen) return;   /* 新しい呼び出しで無効化済み */
-+         if (i >= parts.length) return;
-+         const part = parts[i];
-+         if (part.pause) {
-+           setTimeout(() => next(i + 1), part.ms || 1000);
-+           return;
-+         }
-+         const utt  = new SpeechSynthesisUtterance(part.text);
-+         utt.lang   = part.lang;
-+         utt.rate   = 1.0;
-+         const v    = findVoice(part.lang);
-+         if (v) utt.voice = v;
-+         utt.onend  = () => next(i + 1);
-+         utt.onerror = () => next(i + 1);  /* エラーでも次へ進む */
-+         window.speechSynthesis.speak(utt);
-+         /* Chrome: speak 直後に pause 状態になることがある */
-+         if (window.speechSynthesis.paused) window.speechSynthesis.resume();
-+       }
-+       next(0);
-+     }
-+ 
-+     /* NetHack ステータス行を TTS 向けに変換（ステータス行のみ適用） */
-+     function formatForSpeech(text) {
-+       if (!/\bSt:\d/i.test(text) && !/\bDlvl:/i.test(text)) return text;
-+       return text
-+         .replace(/\bDlvl:/gi, 'DLEVEL')
-+         .replace(/\$:/g,      'DOLLAR')
-+         .replace(/\bSt:/gi,   'ST')
-+         .replace(/\bDx:/gi,   'DX')
-+         .replace(/\bCo:/gi,   'CO')
-+         .replace(/\bIn:/gi,   'IN')
-+         .replace(/\bWi:/gi,   'WI')
-+         .replace(/\bCh:/gi,   'CH')
-+         .replace(/\bHP:/gi,   'HP')
-+         .replace(/\bPw:/gi,   'PW')
-+         .replace(/\bAC:/gi,   'AC')
-+         .replace(/\bXp:/gi,   'XP')
-+         .replace(/\bT:/g,     'T');
-+     }
-+ 
-+     /* テキストをスペース3つ以上で分割し、間に1秒ポーズを挟んだ parts 配列を返す */
-+     function textToParts(text, lang) {
-+       const segs = text.trim().split(/ {3,}/);
-+       const parts = [];
-+       segs.forEach((s, i) => {
-+         const t = formatForSpeech(s.trim());
-+         if (t) parts.push({ text: t, lang });
-+         if (i < segs.length - 1) parts.push({ pause: true, ms: 1000 });
-+       });
-+       return parts.length ? parts : [];
-+     }
-+ 
-+     /* ゲーム画面の自動読み上げ（英語のみ） */
-+     function speak(text) {
-+       if (!speechOn || !text.trim()) return;
-+       speakSequential(textToParts(text.trim(), 'en-US'));
-+     }
-+ 
-+     /* 1行分のテキストを抽出 */
-+     function extractRowText(cells, w, row) {
-+       return cells.slice(row * w, (row + 1) * w)
-+         .map(([cp]) => (cp === 0 || cp === 32) ? ' ' : String.fromCodePoint(cp))
-+         .join('').trimEnd();
-+     }
-+ 
-+     /* 読み上げ用メッセージを取得。
-+      * --More-- → その行まで結合して --More-- 除去。
-+      * (end) あり → 全非空行結合（ページ表示メニュー）。
-+      * 行0が空 → 全非空行結合（起動画面など）。
-+      * それ以外 → 行0のみ。
-+      * 戻り値: {text, key} */
-+     function extractSpeechText(cells, w, h) {
-+       for (let y = 0; y < h; y++) {
-+         const row = extractRowText(cells, w, y);
-+         const mi  = row.indexOf('--More--');
-+         if (mi !== -1) {
-+           const lines = [];
-+           for (let r = 0; r <= y; r++)
-+             lines.push(extractRowText(cells, w, r));
-+           const full = lines.join(' ');
-+           const cut  = full.slice(0, full.indexOf('--More--')).trim();
-+           return { text: cut, key: cut };
-+         }
-+       }
-+       /* (end) の有無を確認 */
-+       let hasEnd = false;
-+       for (let y = 0; y < h; y++) {
-+         if (extractRowText(cells, w, y).indexOf('(end)') !== -1) { hasEnd = true; break; }
-+       }
-+       const row0 = extractRowText(cells, w, 0);
-+       /* (end) あり（メニュー）→ 全非空行を結合（ステータス行・(end) は除去） */
-+       if (hasEnd) {
-+         const lines = [];
-+         for (let y = 0; y < h; y++) {
-+           const row = extractRowText(cells, w, y);
-+           if (!row || isStatusRow(row)) continue;
-+           const cleaned = row.replace(/\(end\)\s*$/, '').trimEnd();
-+           if (cleaned) lines.push(cleaned.trim());
-+         }
-+         const text = lines.join('  ');
-+         return { text, key: text };
-+       }
-+       /* 行0に内容あり → 行0のみ読む */
-+       if (row0) return { text: row0, key: row0 };
-+       /* 行0が空でメッセージなし（移動後など）→ 無音 */
-+       return { text: '', key: '' };
-+     }
-+ 
-+     /* ---- Read Again ボタン ---- */
-+     document.getElementById('replay-btn').addEventListener('click', () => {
-+       if (!lastData) return;
-+       const { w, h, cells } = lastData;
-+       let toSpeak = extractSpeechText(cells, w, h).text;
-+       if (!toSpeak) {
-+         /* 行0が空（起動画面など）→ 全非空・非ステータス行を結合して読む */
-+         const lines = [];
-+         for (let y = 0; y < h; y++) {
-+           const row = extractRowText(cells, w, y).trim();
-+           if (row && !isStatusRow(row)) lines.push(row);
-+         }
-+         toSpeak = lines.join('  ');
-+       }
-+       if (toSpeak) speakSequential(textToParts(toSpeak, 'en-US'));
-+     });
-+ 
-+     /* ---- Read Status ボタン ---- */
-+     document.getElementById('readstatus-btn').addEventListener('click', () => {
-+       if (!lastData) return;
-+       const { w, h, cells } = lastData;
-+       const statusRows = [];
-+       for (let y = 0; y < h; y++) {
-+         const row = extractRowText(cells, w, y);
-+         if (isStatusRow(row)) statusRows.push(row);
-+       }
-+       if (statusRows.length)
-+         speakSequential(textToParts(statusRows.join('  '), 'en-US'));
-+     });
-+ 
-+     /* ---- Home ボタン ---- */
-+     document.getElementById('home-btn').addEventListener('click', () => {
-+       document.getElementById('screen').innerHTML = '';
-+       document.getElementById('status').textContent = '';
-+       lastText = '';
-+       lastMsg  = '';
-+     });
-+ 
-+     /* ---- 音声トグルボタン ---- */
-+     const speechBtn = document.getElementById('speech-btn');
-+     const replayBtn = document.getElementById('replay-btn');
-+     speechBtn.addEventListener('click', () => {
-+       speechOn = !speechOn;
-+       speechBtn.textContent = speechOn ? 'Sound OFF' : 'Sound ON';
-+       speechBtn.classList.toggle('on', speechOn);
-+       /* replayBtn は Sound ON/OFF に関わらず常に有効 */
-+       document.getElementById('speak-btn').disabled = !speechOn;
-+       if (!speechOn) {
-+         speakGen++;                                      /* タイマー残りを無効化 */
-+         window.speechSynthesis && window.speechSynthesis.cancel();
-+       }
-+     });
-+ 
-+     /* ---- 辞書 ---- */
-+     function dictApply(data) {
-+       dictCache = data;
-+       dictKeys  = Object.keys(dictCache).sort((a, b) => b.length - a.length);
-+     }
-+ 
-+     async function loadDict() {
-+       /* まず localStorage から読み込む */
-+       try {
-+         const stored = localStorage.getItem('nethack_dict');
-+         if (stored) dictApply(JSON.parse(stored));
-+       } catch (_) {}
-+       /* サーバが動いていれば同期（失敗しても無視） */
-+       try {
-+         const res = await fetch(SERVER + '/dict.json?_=' + Date.now());
-+         if (res.ok) {
-+           const data = await res.json();
-+           dictApply(data);
-+           localStorage.setItem('nethack_dict', JSON.stringify(data));
-+         }
-+       } catch (_) {}
-+     }
-+ 
-+     /* Export: dictCache を nethack_dict.json としてダウンロード */
-+     document.getElementById('export-btn').addEventListener('click', () => {
-+       const json = JSON.stringify(dictCache, null, 2);
-+       const blob = new Blob([json], { type: 'application/json' });
-+       const a    = document.createElement('a');
-+       a.href     = URL.createObjectURL(blob);
-+       a.download = 'nethack_dict.json';
-+       a.click();
-+       URL.revokeObjectURL(a.href);
-+     });
-+ 
-+     /* Import: JSON ファイルを読み込んで既存エントリに追記（上書きではなくマージ） */
-+     document.getElementById('import-input').addEventListener('change', (e) => {
-+       const file = e.target.files[0];
-+       if (!file) return;
-+       const reader = new FileReader();
-+       reader.onload = (ev) => {
-+         const msg = document.getElementById('dict-msg');
-+         try {
-+           const incoming = JSON.parse(ev.target.result);
-+           const merged = Object.assign({}, dictCache, incoming);
-+           dictApply(merged);
-+           localStorage.setItem('nethack_dict', JSON.stringify(merged));
-+           msg.style.color = '#16c60c';
-+           msg.textContent = `インポートしました（計 ${Object.keys(merged).length} 件）`;
-+         } catch (_) {
-+           msg.style.color = '#e74856';
-+           msg.textContent = 'JSONの解析に失敗しました';
-+         }
-+         e.target.value = '';
-+       };
-+       reader.readAsText(file);
-+     });
-+ 
-+     /* Clear Dictionary */
-+     document.getElementById('clear-dict-btn').addEventListener('click', () => {
-+       const count = Object.keys(dictCache).length;
-+       if (!confirm(`辞書を完全に消去します（${count} 件）。\nよろしいですか？`)) return;
-+       dictCache = {};
-+       dictKeys  = [];
-+       localStorage.removeItem('nethack_dict');
-+       const msg = document.getElementById('dict-msg');
-+       msg.style.color = '#e74856';
-+       msg.textContent = '辞書を消去しました';
-+     });
-+ 
-+     /* エントリ（文字列 or {ja,other} オブジェクト）をツールチップ文字列に変換 */
-+     function entryToTip(entry) {
-+       if (typeof entry === 'string') return entry;   /* 旧形式 */
-+       let tip = entry.ja || '';
-+       if (entry.other) tip += (tip ? ' ' : '') + '[' + entry.other + ']';
-+       return tip;
-+     }
-+ 
-+     function annotate(rowCells, w) {
-+       if (dictKeys.length === 0) return new Array(w).fill(null);
-+       const text  = rowCells.map(([cp]) =>
-+         (cp === 0 || cp === 32) ? ' ' : String.fromCodePoint(cp)).join('');
-+       const lower = text.toLowerCase();
-+       const tips  = new Array(w).fill(null);
-+       for (const key of dictKeys) {
-+         const tip = entryToTip(dictCache[key]);
-+         if (!tip) continue;
-+         let p = 0;
-+         while (p + key.length <= w) {
-+           const idx = lower.indexOf(key, p);
-+           if (idx === -1) break;
-+           let overlap = false;
-+           for (let i = idx; i < idx + key.length; i++) if (tips[i]) { overlap = true; break; }
-+           if (!overlap)
-+             for (let i = idx; i < idx + key.length; i++) tips[i] = tip;
-+           p = idx + 1;
-+         }
-+       }
-+       return tips;
-+     }
-+ 
-+     function escAttr(s) {
-+       return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
-+     }
-+     function escHtml(s) {
-+       return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-+     }
-+ 
-+     /* ステータス行（下2行）かどうかの判定 */
-+     function isStatusRow(row) {
-+       return /\bSt:\d/i.test(row) || /\bDlvl:/i.test(row);
-+     }
-+ 
-+     function renderScreen(data) {
-+       lastData = data;
-+       const { w, h, cx, cy, cells, lineInput } = data;
-+ 
-+       /* 行入力中（文字入力ごとに画面更新される）は読み上げ・lastMsg更新をスキップ。
-+        * Enterが押されて行入力が終わると lineInput=false になり、
-+        * speechKey !== lastMsg が成立して次の画面が読み上げられる。 */
-+       if (!lineInput) {
-+         const { text: speechText, key: speechKey } = extractSpeechText(cells, w, h);
-+         if (speechKey !== lastMsg) {
-+           speak(speechText);
-+           lastMsg = speechKey;
-+         } else {
-+           /* 行0は変わっていないが画面が変化した場合（例: 著作権画面に "Who are you?" が追加）
-+            * ? で終わるプロンプト行が新たに現れていれば読み上げる */
-+           for (let y = h - 1; y >= 0; y--) {
-+             const row = extractRowText(cells, w, y).trim();
-+             if (row && !isStatusRow(row) && row.endsWith('?') && row !== lastMsg) {
-+               speak(row);
-+               lastMsg = row;
-+               break;
-+             }
-+           }
-+         }
-+       }
-+ 
-+       const rows = [];
-+       for (let y = 0; y < h; y++) {
-+         const rc  = cells.slice(y * w, (y + 1) * w);
-+         const ann = annotate(rc, w);
-+ 
-+         let html    = '';
-+         let curAttr = -1;
-+         let curJa   = undefined;
-+         let inMatch = false;
-+ 
-+         const closeColor = () => { if (curAttr !== -1) { html += '</span>'; curAttr = -1; } };
-+         const closeMatch = () => { if (inMatch) { html += '</span>'; inMatch = false; curJa = null; } };
-+         const openColor  = (a) => {
-+           html += `<span style="color:${PAL[a&0xf]};background:${PAL[(a>>4)&0xf]}">`;
-+           curAttr = a;
-+         };
-+         const openMatch  = (j) => {
-+           html += `<span class="dm" data-tip="${escAttr(j)}">`;
-+           inMatch = true; curJa = j;
-+         };
-+ 
-+         for (let x = 0; x < w; x++) {
-+           const [cp, attr] = rc[x];
-+           const ja = ann[x];
-+           const ch = (cp === 0 || cp === 32)
-+                      ? '\u00a0' : escHtml(String.fromCodePoint(cp));
-+ 
-+           if (x === cx && y === cy) {
-+             closeColor(); closeMatch();
-+             html += `<span class="cursor" style="color:${PAL[attr&0xf]};background:${PAL[(attr>>4)&0xf]}">${ch}</span>`;
-+             continue;
-+           }
-+           if (ja !== curJa) {
-+             closeColor(); closeMatch();
-+             if (ja) openMatch(ja);
-+             curJa = ja;
-+           }
-+           if (attr !== curAttr) { closeColor(); openColor(attr); }
-+           html += ch;
-+         }
-+         closeColor(); closeMatch();
-+         rows.push(`<span class="row">${html}</span>`);
-+       }
-+ 
-+       document.getElementById('screen').innerHTML = rows.join('');
-+     }
-+ 
-+     /* ---- base64url decode → Uint8Array ---- */
-+     function b64urlToBytes(str) {
-+       const rem = str.length % 4;
-+       if (rem === 2) str += '==';
-+       else if (rem === 3) str += '=';
-+       const b64 = str.replace(/-/g, '+').replace(/_/g, '/');
-+       const bin = atob(b64);
-+       const out = new Uint8Array(bin.length);
-+       for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-+       return out;
-+     }
-+ 
-+     /*
-+      * Binary format (see nttty.c dump_screen_url):
-+      *   [0] w  [1] h  [2] cx  [3] cy
-+      *   [4] flags: bit0 = line-input mode (inread > 0)
-+      *   then RLE stream: [count-1][cp_lo][cp_hi][attr] per run
-+      */
-+     function decompressScreen(encoded) {
-+       try {
-+         const bytes = b64urlToBytes(encoded);
-+         if (bytes.length < 4) return null;
-+         const w = bytes[0], h = bytes[1], cx = bytes[2], cy = bytes[3];
-+         const lineInput = bytes.length >= 5 ? (bytes[4] & 1) !== 0 : false;
-+         const cells = [];
-+         let pos = 5;
-+         while (pos + 4 <= bytes.length) {
-+           const count = bytes[pos] + 1;
-+           const cp    = bytes[pos + 1] | (bytes[pos + 2] << 8);
-+           const attr  = bytes[pos + 3];
-+           pos += 4;
-+           for (let i = 0; i < count; i++) cells.push([cp, attr]);
-+         }
-+         if (cells.length !== w * h) return null;
-+         return { w, h, cx, cy, cells, lineInput };
-+       } catch (_) { return null; }
-+     }
-+ 
-+     let refreshBusy = false;
-+     async function refresh() {
-+       if (refreshBusy) return;   /* 前のポーリングが完了するまで次を起動しない */
-+       refreshBusy = true;
-+       try {
-+         const res = await fetch(SERVER + '/data?_=' + Date.now());
-+         if (!res.ok) {
-+           document.getElementById('status').textContent = 'Waiting... (HTTP ' + res.status + ')';
-+           return;
-+         }
-+         const text = (await res.text()).trim();
-+         if (text === lastText) return;
-+         const data = decompressScreen(text);
-+         if (!data) {
-+           document.getElementById('status').textContent = 'Waiting...';
-+           return;
-+         }
-+         lastText = text;
-+         renderScreen(data);
-+         history.replaceState(null, '', '?d=' + text);
-+         document.getElementById('status').textContent =
-+           `${data.w}x${data.h}  cursor(${data.cx},${data.cy})  `
-+           + new Date().toLocaleTimeString();
-+       } catch (e) {
-+         document.getElementById('status').textContent = 'Waiting... (' + e.message + ')';
-+       } finally {
-+         refreshBusy = false;
-+       }
-+     }
-+ 
-+     /* ---- Read ボタン：フォーム欄の内容を順に読み上げ ---- */
-+     document.getElementById('speak-btn').addEventListener('click', () => {
-+       const otherLang = document.getElementById('other-lang').value || 'ja-JP';
-+       const parts = [
-+         { text: document.getElementById('en-input').value.trim(),    lang: 'en-US'    },
-+         { text: document.getElementById('ja-input').value.trim(),    lang: 'ja-JP'    },
-+         { text: document.getElementById('other-input').value.trim(), lang: otherLang  },
-+       ].filter(p => p.text);
-+       if (parts.length) speakSequential(parts);
-+     });
-+ 
-+     /* ---- 辞書入力フォーム ---- */
-+     document.getElementById('en-input').addEventListener('input', () => {
-+       const key   = document.getElementById('en-input').value.trim().toLowerCase();
-+       const entry = key ? dictCache[key] : null;
-+       if (entry && typeof entry === 'string') {
-+         /* 旧形式 */
-+         document.getElementById('ja-input').value    = entry;
-+         document.getElementById('other-input').value = '';
-+         document.getElementById('other-lang').value  = 'ja-JP';
-+       } else if (entry && typeof entry === 'object') {
-+         document.getElementById('ja-input').value    = entry.ja         || '';
-+         document.getElementById('other-input').value = entry.other      || '';
-+         document.getElementById('other-lang').value  = entry.other_lang || 'ja-JP';
-+       } else {
-+         document.getElementById('ja-input').value    = '';
-+         document.getElementById('other-input').value = '';
-+         document.getElementById('other-lang').value  = 'ja-JP';
-+       }
-+     });
-+ 
-+     document.getElementById('reg-btn').addEventListener('click', async () => {
-+       const en         = document.getElementById('en-input').value.trim();
-+       const ja         = document.getElementById('ja-input').value.trim();
-+       const other      = document.getElementById('other-input').value.trim();
-+       const other_lang = document.getElementById('other-lang').value;
-+       const msg        = document.getElementById('dict-msg');
-+       if (!en || (!ja && !other)) {
-+         msg.style.color = '#e74856';
-+         msg.textContent = '英語と、日本語またはその他のどちらかを入力してください';
-+         return;
-+       }
-+       /* localStorage に保存（サーバ不要） */
-+       dictCache[en.toLowerCase()] = { ja, other, other_lang };
-+       dictKeys = Object.keys(dictCache).sort((a, b) => b.length - a.length);
-+       localStorage.setItem('nethack_dict', JSON.stringify(dictCache));
-+       msg.style.color = '#16c60c';
-+       msg.textContent = `登録しました（計 ${Object.keys(dictCache).length} 件）`;
-+       document.getElementById('en-input').value    = '';
-+       document.getElementById('ja-input').value    = '';
-+       document.getElementById('other-input').value = '';
-+       document.getElementById('other-lang').value  = 'ja-JP';
-+       /* サーバが動いていれば同期（失敗しても無視） */
-+       try {
-+         const form = new URLSearchParams({ en, ja, other, other_lang });
-+         await fetch(SERVER + '/dict.json', {
-+           method: 'POST',
-+           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-+           body: form.toString()
-+         });
-+       } catch (_) {}
-+     });
-+ 
-+     /* ---- ツールチップ ---- */
-+     const tooltip = document.getElementById('jp-tooltip');
-+     document.getElementById('screen').addEventListener('mousemove', (e) => {
-+       const dm = e.target.closest('.dm');
-+       if (dm) {
-+         tooltip.textContent = dm.dataset.tip;
-+         tooltip.style.display = 'block';
-+         tooltip.style.left = e.clientX + 'px';
-+         tooltip.style.top  = (e.clientY + 18) + 'px';
-+       } else {
-+         tooltip.style.display = 'none';
-+       }
-+     });
-+     document.getElementById('screen').addEventListener('mouseleave', () => {
-+       tooltip.style.display = 'none';
-+     });
-+ 
-+     /* ---- 単語クリック：入力欄へのコピー＋辞書情報の復元 ---- */
-+     function fillDictInputs(word) {
-+       const key   = word.toLowerCase();
-+       const entry = dictCache[key];
-+       document.getElementById('en-input').value = word;
-+       if (entry && typeof entry === 'string') {
-+         document.getElementById('ja-input').value    = entry;
-+         document.getElementById('other-input').value = '';
-+         document.getElementById('other-lang').value  = 'ja-JP';
-+       } else if (entry && typeof entry === 'object') {
-+         document.getElementById('ja-input').value    = entry.ja         || '';
-+         document.getElementById('other-input').value = entry.other      || '';
-+         document.getElementById('other-lang').value  = entry.other_lang || 'ja-JP';
-+       } else {
-+         document.getElementById('ja-input').value    = '';
-+         document.getElementById('other-input').value = '';
-+         document.getElementById('other-lang').value  = 'ja-JP';
-+       }
-+     }
-+ 
-+     /* ---- 単語読み上げ（クリック／タップ） ---- */
-+     function speakWord(word) {
-+       if (!word) return;
-+       speakSequential([{ text: word.trim(), lang: 'en-US' }]);
-+     }
-+ 
-+     function wordAtPoint(x, y) {
-+       let node, offset;
-+       if (document.caretPositionFromPoint) {
-+         const pos = document.caretPositionFromPoint(x, y);
-+         if (!pos) return '';
-+         node = pos.offsetNode; offset = pos.offset;
-+       } else if (document.caretRangeFromPoint) {
-+         const r = document.caretRangeFromPoint(x, y);
-+         if (!r) return '';
-+         node = r.startContainer; offset = r.startOffset;
-+       } else { return ''; }
-+       if (node.nodeType !== Node.TEXT_NODE) return '';
-+       const text = node.textContent;
-+       /*  （描画上の空白）は単語区切りとして扱う */
-+       const isWord = (c) => c !== ' ' && /\S/.test(c);
-+       let s = offset, e = offset;
-+       while (s > 0 && isWord(text[s - 1])) s--;
-+       while (e < text.length && isWord(text[e])) e++;
-+       return text.slice(s, e);
-+     }
-+ 
-+     const scr = document.getElementById('screen');
-+ 
-+     /* クリック／タップで単語を読み上げ。
-+      * touchend で先に処理し、直後に発火する click をスキップする。 */
-+     let touchJustFired = false;
-+     scr.addEventListener('touchend', (e) => {
-+       if (e.changedTouches.length !== 1) return;
-+       touchJustFired = true;
-+       setTimeout(() => { touchJustFired = false; }, 500);
-+       const t    = e.changedTouches[0];
-+       const word = wordAtPoint(t.clientX, t.clientY);
-+       if (!word) return;
-+       fillDictInputs(word);
-+       if (speechOn) speakWord(word);
-+     }, { passive: true });
-+ 
-+     scr.addEventListener('click', (e) => {
-+       if (touchJustFired) return;
-+       const word = wordAtPoint(e.clientX, e.clientY);
-+       if (!word) return;
-+       fillDictInputs(word);
-+       if (speechOn) speakWord(word);
-+     });
-+ 
-+     /* If opened with ?d=..., render the snapshot immediately */
-+     (function() {
-+       const d = new URLSearchParams(window.location.search).get('d');
-+       if (!d) return;
-+       const data = decompressScreen(d);
-+       if (!data) return;
-+       renderScreen(data);
-+       lastText = d;
-+       document.getElementById('status').textContent =
-+         `${data.w}x${data.h}  cursor(${data.cx},${data.cy})  [snapshot]`;
-+     })();
-+ 
-+     loadDict();
-+     refresh();
-+     setInterval(refresh, POLL_MS);
-+     /* Chrome workaround: TTS が pause 状態で止まることがある */
-+     setInterval(() => {
-+       if (window.speechSynthesis && window.speechSynthesis.paused)
-+         window.speechSynthesis.resume();
-+     }, 5000);
-+   </script>
-+ </body>
-+ </html>
-
