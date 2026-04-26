@@ -935,6 +935,7 @@ http_handle(SOCKET c)
     if (n <= 0) return;
     req[n] = '\0';
     if (sscanf(req, "%7s %511s", method, path_buf) != 2) return;
+    { char *q = strchr(path_buf, '?'); if (q) *q = '\0'; }
 
     body = strstr(req, "\r\n\r\n");
     body = body ? body + 4 : "";
