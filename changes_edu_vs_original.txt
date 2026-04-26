@@ -1,0 +1,1576 @@
+﻿================================================================
+NetHack 3.6.7 Educational Edition - 変更点一覧
+orig: nethack-367-src-original
+edu : nethack-367-src-edu
+生成日時: 2026-04-26 09:35:41
+================================================================
+
+----------------------------------------------------------------
+FILE: sys/winnt/nttty.c
+----------------------------------------------------------------
+--- C:\xampp\htdocs\nethack\nethack\nethack-367-src-original\NetHack-3.6.7\sys\winnt\nttty.c	2023-02-16 06:52:57.000000000 +0900
++++ C:\xampp\htdocs\nethack\nethack\nethack-367-src-edu\NetHack-3.6.7\sys\winnt\nttty.c	2026-04-26 08:13:02.625677100 +0900
+@@ -15,7 +15,11 @@
+ 
+ #ifdef WIN32
+ #define NEED_VARARGS /* Uses ... */
+-#include "win32api.h"
++#include "win32api.h"       /* defines WIN32_LEAN_AND_MEAN then includes windows.h */
++#include <winsock2.h>       /* after windows.h; WIN32_LEAN_AND_MEAN prevents winsock.h conflict */
++#include <shellapi.h>
++#pragma comment(lib, "Ws2_32.lib")
++#pragma comment(lib, "Shell32.lib")
+ #include "winos.h"
+ #include "hack.h"
+ #include "wintty.h"
+@@ -78,6 +82,8 @@
+           (INPUT_RECORD *, boolean *, BOOLEAN_P numberpad, int portdebug));
+ static void NDECL(init_ttycolor);
+ static void NDECL(really_move_cursor);
++static void NDECL(dump_screen_url);
++static void NDECL(http_server_start);
+ static void NDECL(check_and_set_font);
+ static boolean NDECL(check_font_widths);
+ static void NDECL(set_known_good_console_font);
+@@ -453,6 +459,12 @@
+     return keyboard_handling.pNHkbhit(console.hConIn, &ir);
+ }
+ 
++static int s_getlin_active  = 0; /* 1 after first char in getlin */
++static int s_getlin_pending = 0; /* 1 between begin and first tgetch */
++
++void nttty_getlin_begin(void) { s_getlin_pending = 1; s_getlin_active = 0; }
++void nttty_getlin_end(void)   { s_getlin_active  = 0; s_getlin_pending = 0; }
++
+ int
+ tgetch()
+ {
+@@ -462,6 +474,9 @@
+     boolean numpad = iflags.num_pad;
+ 
+     really_move_cursor();
++    dump_screen_url();
++    /* pending → active: prompt was just rendered; suppress from 2nd char onward */
++    if (s_getlin_pending) { s_getlin_pending = 0; s_getlin_active = 1; }
+     if (iflags.debug_fuzzer)
+         return randomkey();
+ #ifdef QWERTZ_SUPPORT
+@@ -485,6 +500,7 @@
+     boolean numpad = iflags.num_pad;
+ 
+     really_move_cursor();
++    dump_screen_url();
+     if (iflags.debug_fuzzer)
+         return randomkey();
+ #ifdef QWERTZ_SUPPORT
+@@ -537,6 +553,661 @@
+     SetConsoleCursorPosition(console.hConOut, console.cursor);
+ }
+ 
++/* base64url encoding (RFC 4648 §5, no padding) */
++static const char b64url_table[64] =
++    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
++
++static int
++b64url_encode(const unsigned char *in, int inlen, char *out, int outmax)
++{
++    int i, j = 0;
++    for (i = 0; i < inlen; i += 3) {
++        unsigned int b0 = in[i];
++        unsigned int b1 = (i + 1 < inlen) ? (unsigned int)in[i + 1] : 0;
++        unsigned int b2 = (i + 2 < inlen) ? (unsigned int)in[i + 2] : 0;
++        if (j + 4 >= outmax)
++            return -1;
++        out[j++] = b64url_table[b0 >> 2];
++        out[j++] = b64url_table[((b0 & 3) << 4) | (b1 >> 4)];
++        if (i + 1 < inlen)
++            out[j++] = b64url_table[((b1 & 15) << 2) | (b2 >> 6)];
++        if (i + 2 < inlen)
++            out[j++] = b64url_table[b2 & 63];
++    }
++    out[j] = '\0';
++    return j;
++}
++
++/* ---- Mini HTTP server (serves nethack_viewer.html + /data + dict) ------- */
++#define HTTP_PORT  18080
++#define HTTP_DMAX  32768    /* max base64url data size per screen */
++#define DICT_MAX   4096
++#define DICT_EN    128
++#define DICT_VAL   512
++#define DICT_LANG  16
++
++static char             s_screen_buf[HTTP_DMAX];
++static CRITICAL_SECTION s_screen_cs;
++static char             s_html_path[MAX_PATH];
++static char             s_ini_path[MAX_PATH];
++static int              s_http_port = HTTP_PORT;
++static volatile LONG    s_viewer_connected = 0; /* set to 1 when /data is first fetched */
++
++/* ---- dictionary ---- */
++typedef struct {
++    char en[DICT_EN];
++    char ja[DICT_VAL];
++    char other[DICT_VAL];
++    char other_lang[DICT_LANG];
++} dict_entry_t;
++
++static dict_entry_t *s_dict     = NULL;
++static int           s_dict_cnt = 0;
++static char          s_dict_path[MAX_PATH];
++
++static void
++setting_load(const char *dir)
++{
++    FILE *fp;
++    char  line[256];
++    snprintf(s_ini_path, sizeof(s_ini_path), "%ssetting.ini", dir);
++    fp = fopen(s_ini_path, "rb");
++    if (!fp) {
++        fp = fopen(s_ini_path, "wb");
++        if (fp) {
++            fprintf(fp, "[server]\r\nport=%d\r\n", HTTP_PORT);
++            fclose(fp);
++        }
++        s_http_port = HTTP_PORT;
++        return;
++    }
++    while (fgets(line, sizeof(line), fp)) {
++        char *p = line;
++        while (*p == ' ' || *p == '\t') p++;
++        if (*p == ';' || *p == '#' || *p == '[' || *p == '\r' || *p == '\n') continue;
++        if (strncmp(p, "port=", 5) == 0) {
++            int v = atoi(p + 5);
++            if (v > 0 && v <= 65535) s_http_port = v;
++        }
++    }
++    fclose(fp);
++}
++
++static void
++http_data_set(const char *b64, int len)
++{
++    EnterCriticalSection(&s_screen_cs);
++    if (len >= HTTP_DMAX) len = HTTP_DMAX - 1;
++    memcpy(s_screen_buf, b64, len);
++    s_screen_buf[len] = '\0';
++    LeaveCriticalSection(&s_screen_cs);
++}
++
++static void
++http_respond(SOCKET c, int code, const char *ctype,
++             const char *body, int blen)
++{
++    char hdr[512];
++    int  hlen;
++    hlen = snprintf(hdr, sizeof(hdr),
++        "HTTP/1.1 %d %s\r\n"
++        "Content-Type: %s\r\n"
++        "Content-Length: %d\r\n"
++        "Access-Control-Allow-Origin: *\r\n"
++        "Cache-Control: no-cache\r\n"
++        "Connection: close\r\n"
++        "\r\n",
++        code, (code == 200) ? "OK" : "Not Found", ctype, blen);
++    send(c, hdr, hlen, 0);
++    if (body && blen > 0)
++        send(c, body, blen, 0);
++}
++
++/* Decode application/x-www-form-urlencoded value in-place */
++static void
++url_decode(const char *src, char *dst, int dstmax)
++{
++    int i = 0, j = 0;
++    while (src[i] && j < dstmax - 1) {
++        unsigned char c = (unsigned char)src[i];
++        if (c == '+') {
++            dst[j++] = ' '; i++;
++        } else if (c == '%'
++                && isxdigit((unsigned char)src[i+1])
++                && isxdigit((unsigned char)src[i+2])) {
++            int hi = isdigit((unsigned char)src[i+1]) ? src[i+1]-'0'
++                     : tolower((unsigned char)src[i+1])-'a'+10;
++            int lo = isdigit((unsigned char)src[i+2]) ? src[i+2]-'0'
++                     : tolower((unsigned char)src[i+2])-'a'+10;
++            dst[j++] = (char)((hi << 4) | lo);
++            i += 3;
++        } else {
++            dst[j++] = src[i++];
++        }
++    }
++    dst[j] = '\0';
++}
++
++/* Extract a single field from a URL-encoded form body */
++static void
++form_field(const char *body, const char *key, char *val, int valmax)
++{
++    char pat[DICT_EN + 2];
++    const char *p, *end;
++    char enc[DICT_VAL];
++    int len;
++    snprintf(pat, sizeof(pat), "%s=", key);
++    p = strstr(body, pat);
++    if (!p) { val[0] = '\0'; return; }
++    p += strlen(pat);
++    end = strchr(p, '&');
++    len = end ? (int)(end - p) : (int)strlen(p);
++    if (len >= (int)sizeof(enc)) len = (int)sizeof(enc) - 1;
++    memcpy(enc, p, len);
++    enc[len] = '\0';
++    url_decode(enc, val, valmax);
++}
++
++/* Write a JSON-escaped string into dst, return chars written */
++static int
++json_esc(const char *src, char *dst, int dstmax)
++{
++    int i = 0, j = 0;
++    while (src[i] && j < dstmax - 2) {
++        unsigned char c = (unsigned char)src[i];
++        if (c == '"' || c == '\\') {
++            if (j + 2 >= dstmax) break;
++            dst[j++] = '\\'; dst[j++] = c;
++        } else if (c < 0x20) {
++            if (j + 7 >= dstmax) break;
++            j += snprintf(dst + j, dstmax - j, "\\u%04x", c);
++        } else {
++            dst[j++] = c; /* pass-through UTF-8 bytes unchanged */
++        }
++        i++;
++    }
++    dst[j] = '\0';
++    return j;
++}
++
++/* Load dictionary from tab-separated file: en\tja\tother\tother_lang */
++/* Read a JSON string (p points just after opening '"'), write to dst.
++ * Returns pointer after closing '"'. Handles \\ \" \/ \n \t \uXXXX. */
++static const char *
++json_read_str(const char *p, char *dst, int dstmax)
++{
++    int j = 0;
++    while (*p && *p != '"' && j < dstmax - 1) {
++        if (*p == '\\') {
++            p++;
++            switch (*p) {
++            case '"': case '\\': case '/':
++                dst[j++] = *p; break;
++            case 'n': dst[j++] = '\n'; break;
++            case 't': dst[j++] = '\t'; break;
++            case 'r': dst[j++] = '\r'; break;
++            case 'u':
++                if (isxdigit((unsigned char)p[1]) && isxdigit((unsigned char)p[2])
++                 && isxdigit((unsigned char)p[3]) && isxdigit((unsigned char)p[4])) {
++                    unsigned int cp;
++                    char hex[5] = { p[1], p[2], p[3], p[4], '\0' };
++                    cp = (unsigned int)strtoul(hex, NULL, 16);
++                    p += 4;
++                    if (cp < 0x80 && j < dstmax - 1) {
++                        dst[j++] = (char)cp;
++                    } else if (cp < 0x800 && j < dstmax - 2) {
++                        dst[j++] = (char)(0xC0 | (cp >> 6));
++                        dst[j++] = (char)(0x80 | (cp & 0x3F));
++                    } else if (j < dstmax - 3) {
++                        dst[j++] = (char)(0xE0 | (cp >> 12));
++                        dst[j++] = (char)(0x80 | ((cp >> 6) & 0x3F));
++                        dst[j++] = (char)(0x80 | (cp & 0x3F));
++                    }
++                }
++                break;
++            default: dst[j++] = *p; break;
++            }
++        } else {
++            dst[j++] = *p;
++        }
++        p++;
++    }
++    dst[j] = '\0';
++    if (*p == '"') p++;
++    return p;
++}
++
++/* Load dictionary from nethack_dict.json */
++static void
++dict_load(void)
++{
++    FILE       *fp;
++    long        fsz;
++    char       *json;
++    const char *p;
++    char        en[DICT_EN], ja[DICT_VAL], oth[DICT_VAL], lang[DICT_LANG];
++
++    if (!s_dict)
++        s_dict = (dict_entry_t *)calloc(DICT_MAX, sizeof(dict_entry_t));
++    if (!s_dict) return;
++    s_dict_cnt = 0;
++
++    fp = fopen(s_dict_path, "rb");
++    if (!fp) return;
++    fseek(fp, 0, SEEK_END); fsz = ftell(fp); rewind(fp);
++    json = (char *)malloc(fsz + 1);
++    if (!json) { fclose(fp); return; }
++    fread(json, 1, fsz, fp);
++    json[fsz] = '\0';
++    fclose(fp);
++
++    /* scan for outer { */
++    p = json;
++    while (*p && *p != '{') p++;
++    if (!*p) { free(json); return; }
++    p++;
++
++    while (*p && s_dict_cnt < DICT_MAX) {
++        while (*p == ',' || *p == ' ' || *p == '\n' || *p == '\r') p++;
++        if (*p == '}' || !*p) break;
++        if (*p != '"') { p++; continue; }
++        p++;
++        p = json_read_str(p, en, sizeof(en));
++
++        /* skip to inner { */
++        while (*p && *p != '{' && *p != '}') p++;
++        if (*p != '{') break;
++        p++;
++
++        ja[0] = oth[0] = '\0';
++        strncpy(lang, "ja-JP", sizeof(lang) - 1);
++
++        while (*p && *p != '}') {
++            char fname[32], fval[DICT_VAL];
++            while (*p == ',' || *p == ' ') p++;
++            if (*p != '"') { if (*p) p++; continue; }
++            p++;
++            p = json_read_str(p, fname, sizeof(fname));
++            while (*p == ' ' || *p == ':') p++;
++            if (*p != '"') continue;
++            p++;
++            p = json_read_str(p, fval, sizeof(fval));
++            if (strcmp(fname, "ja") == 0)
++                strncpy(ja,   fval, DICT_VAL  - 1);
++            else if (strcmp(fname, "other") == 0)
++                strncpy(oth,  fval, DICT_VAL  - 1);
++            else if (strcmp(fname, "other_lang") == 0)
++                strncpy(lang, fval, DICT_LANG - 1);
++        }
++        if (*p == '}') p++;
++
++        if (en[0]) {
++            dict_entry_t *e = &s_dict[s_dict_cnt++];
++            memset(e, 0, sizeof(*e));
++            strncpy(e->en,         en,   DICT_EN   - 1);
++            strncpy(e->ja,         ja,   DICT_VAL  - 1);
++            strncpy(e->other,      oth,  DICT_VAL  - 1);
++            strncpy(e->other_lang, lang, DICT_LANG - 1);
++        }
++    }
++    free(json);
++}
++
++static char *dict_to_json(int *outlen);
++
++/* Write dictionary to nethack_dict.json */
++static void
++dict_save_file(void)
++{
++    int   jlen;
++    char *jbuf = dict_to_json(&jlen);
++    if (!jbuf) return;
++    FILE *fp = fopen(s_dict_path, "wb");
++    if (fp) { fwrite(jbuf, 1, jlen, fp); fclose(fp); }
++    free(jbuf);
++}
++
++static void
++dict_set(const char *en, const char *ja,
++         const char *other, const char *other_lang)
++{
++    int i;
++    dict_entry_t *e = NULL;
++    char en_lc[DICT_EN];
++    strncpy(en_lc, en, DICT_EN - 1); en_lc[DICT_EN - 1] = '\0';
++    for (i = 0; en_lc[i]; i++) en_lc[i] = (char)tolower((unsigned char)en_lc[i]);
++    for (i = 0; i < s_dict_cnt; i++)
++        if (_stricmp(s_dict[i].en, en) == 0) { e = &s_dict[i]; break; }
++    if (!e) {
++        if (s_dict_cnt >= DICT_MAX) return;
++        e = &s_dict[s_dict_cnt++];
++    }
++    strncpy(e->en,         en_lc,                           DICT_EN   - 1);
++    strncpy(e->ja,         ja,                              DICT_VAL  - 1);
++    strncpy(e->other,      other,                           DICT_VAL  - 1);
++    strncpy(e->other_lang, other_lang[0] ? other_lang : "ja-JP", DICT_LANG - 1);
++}
++
++/* Serialize dictionary to JSON object string (caller must free) */
++static char *
++dict_to_json(int *outlen)
++{
++    int cap = 64 * 1024, pos = 0, i;
++    char *buf = (char *)malloc(cap);
++    char tmp[DICT_VAL * 4];
++    int tl;
++    if (!buf) { *outlen = 0; return NULL; }
++    buf[pos++] = '{';
++    for (i = 0; i < s_dict_cnt; i++) {
++        dict_entry_t *e = &s_dict[i];
++        if (pos + 256 >= cap) break;
++        if (i > 0) buf[pos++] = ',';
++        buf[pos++] = '"';
++        tl = json_esc(e->en, tmp, sizeof(tmp));
++        memcpy(buf + pos, tmp, tl); pos += tl;
++        pos += snprintf(buf + pos, cap - pos, "\":{\"ja\":\"");
++        tl = json_esc(e->ja, tmp, sizeof(tmp));
++        memcpy(buf + pos, tmp, tl); pos += tl;
++        pos += snprintf(buf + pos, cap - pos, "\",\"other\":\"");
++        tl = json_esc(e->other, tmp, sizeof(tmp));
++        memcpy(buf + pos, tmp, tl); pos += tl;
++        pos += snprintf(buf + pos, cap - pos, "\",\"other_lang\":\"");
++        tl = json_esc(e->other_lang, tmp, sizeof(tmp));
++        memcpy(buf + pos, tmp, tl); pos += tl;
++        pos += snprintf(buf + pos, cap - pos, "\"}");
++    }
++    buf[pos++] = '}';
++    buf[pos] = '\0';
++    *outlen = pos;
++    return buf;
++}
++
++static void
++http_handle(SOCKET c)
++{
++    char req[8192], method[8], path_buf[512];
++    const char *body;
++    DWORD timeout = 2000;
++    int n;
++
++    setsockopt(c, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout));
++    n = recv(c, req, sizeof(req) - 1, 0);
++    if (n <= 0) return;
++    req[n] = '\0';
++    if (sscanf(req, "%7s %511s", method, path_buf) != 2) return;
++
++    body = strstr(req, "\r\n\r\n");
++    body = body ? body + 4 : "";
++
++    /* GET /data */
++    if (strcmp(method, "GET") == 0
++            && strncmp(path_buf, "/data", 5) == 0
++            && (path_buf[5] == '\0' || path_buf[5] == '?')) {
++        char *buf = (char *)malloc(HTTP_DMAX);
++        int   len = 0;
++        InterlockedExchange(&s_viewer_connected, 1); /* viewer is open */
++        if (buf) {
++            EnterCriticalSection(&s_screen_cs);
++            len = (int)strlen(s_screen_buf);
++            memcpy(buf, s_screen_buf, len);
++            LeaveCriticalSection(&s_screen_cs);
++            http_respond(c, 200, "text/plain; charset=US-ASCII", buf, len);
++            free(buf);
++        }
++        return;
++    }
++
++    /* GET /dict.json  – serve dictionary as JSON */
++    if (strcmp(method, "GET") == 0
++            && strncmp(path_buf, "/dict.json", 10) == 0) {
++        int jlen;
++        char *jbuf = dict_to_json(&jlen);
++        if (jbuf) {
++            http_respond(c, 200, "application/json; charset=UTF-8", jbuf, jlen);
++            free(jbuf);
++        } else {
++            http_respond(c, 200, "application/json", "{}", 2);
++        }
++        return;
++    }
++
++    /* POST /dict.json  – add/update dictionary entry */
++    if (strcmp(method, "POST") == 0
++            && strncmp(path_buf, "/dict.json", 10) == 0) {
++        char en[DICT_EN], ja[DICT_VAL], other[DICT_VAL], lang[DICT_LANG];
++        char resp[64];
++        int  rlen;
++        form_field(body, "en",         en,    sizeof(en));
++        form_field(body, "ja",         ja,    sizeof(ja));
++        form_field(body, "other",      other, sizeof(other));
++        form_field(body, "other_lang", lang,  sizeof(lang));
++        if (en[0] && (ja[0] || other[0])) {
++            dict_set(en, ja, other, lang);
++            dict_save_file();
++            rlen = snprintf(resp, sizeof(resp),
++                            "{\"ok\":true,\"count\":%d}", s_dict_cnt);
++        } else {
++            rlen = snprintf(resp, sizeof(resp),
++                            "{\"ok\":false,\"error\":\"missing fields\"}");
++        }
++        http_respond(c, 200, "application/json", resp, rlen);
++        return;
++    }
++
++    /* GET /  or  /nethack_viewer.html  – serve the HTML file */
++    if (strcmp(method, "GET") == 0
++            && (strcmp(path_buf, "/") == 0
++                || strncmp(path_buf, "/nethack_viewer.html", 20) == 0)) {
++        FILE *fp = fopen(s_html_path, "rb");
++        if (!fp) {
++            const char *msg = "nethack_viewer.html not found";
++            http_respond(c, 404, "text/plain", msg, (int)strlen(msg));
++            return;
++        }
++        fseek(fp, 0, SEEK_END);
++        long fsz = ftell(fp);
++        rewind(fp);
++        char *fbuf = (char *)malloc(fsz);
++        if (fbuf) {
++            fread(fbuf, 1, fsz, fp);
++            http_respond(c, 200, "text/html; charset=UTF-8", fbuf, (int)fsz);
++            free(fbuf);
++        }
++        fclose(fp);
++        return;
++    }
++
++    http_respond(c, 404, "text/plain", "Not Found", 9);
++}
++
++static DWORD WINAPI
++http_server_thread(LPVOID unused)
++{
++    WSADATA            wsa;
++    SOCKET             srv, cli;
++    struct sockaddr_in addr;
++    int                yes = 1;
++
++    (void)unused;
++    if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) return 1;
++    srv = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
++    if (srv == INVALID_SOCKET) { WSACleanup(); return 1; }
++    setsockopt(srv, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes));
++    memset(&addr, 0, sizeof(addr));
++    addr.sin_family      = AF_INET;
++    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
++    addr.sin_port        = htons((u_short)s_http_port);
++    if (bind(srv, (struct sockaddr *)&addr, sizeof(addr)) != 0
++            || listen(srv, 4) != 0) {
++        closesocket(srv); WSACleanup(); return 1;
++    }
++    for (;;) {
++        fd_set fds; struct timeval tv;
++        FD_ZERO(&fds); FD_SET(srv, &fds);
++        tv.tv_sec = 0; tv.tv_usec = 200000;
++        if (select(0, &fds, NULL, NULL, &tv) <= 0) continue;
++        cli = accept(srv, NULL, NULL);
++        if (cli == INVALID_SOCKET) continue;
++        http_handle(cli);
++        closesocket(cli);
++    }
++    return 0;
++}
++
++/* Patch 'http://localhost:PORT' in nethack_viewer.html to match s_http_port */
++static void
++html_patch_port(void)
++{
++    FILE  *fp;
++    char  *buf, *newbuf, *pos, *end;
++    long   fsize;
++    char   newurl[64];
++    int    old_len, new_len, prefix_len;
++
++    fp = fopen(s_html_path, "rb");
++    if (!fp) return;
++    fseek(fp, 0, SEEK_END); fsize = ftell(fp); rewind(fp);
++    buf = (char *)malloc(fsize + 1);
++    if (!buf) { fclose(fp); return; }
++    if ((long)fread(buf, 1, fsize, fp) != fsize) { fclose(fp); free(buf); return; }
++    fclose(fp);
++    buf[fsize] = '\0';
++
++    pos = strstr(buf, "'http://localhost:");
++    if (!pos) { free(buf); return; }
++    pos++;                          /* skip leading ' */
++    end = strchr(pos, '\'');
++    if (!end) { free(buf); return; }
++
++    snprintf(newurl, sizeof(newurl), "http://localhost:%d", s_http_port);
++    old_len    = (int)(end - pos);
++    new_len    = (int)strlen(newurl);
++    prefix_len = (int)(pos - buf);
++
++    if (old_len == new_len && memcmp(pos, newurl, new_len) == 0) { free(buf); return; }
++
++    newbuf = (char *)malloc(fsize - old_len + new_len + 1);
++    if (!newbuf) { free(buf); return; }
++    memcpy(newbuf,                        buf, prefix_len);
++    memcpy(newbuf + prefix_len,           newurl, new_len);
++    memcpy(newbuf + prefix_len + new_len, end, fsize - prefix_len - old_len);
++    free(buf);
++
++    fp = fopen(s_html_path, "wb");
++    if (fp) { fwrite(newbuf, 1, fsize - old_len + new_len, fp); fclose(fp); }
++    free(newbuf);
++}
++
++static void
++http_server_start(void)
++{
++    char dir[MAX_PATH], *sep;
++    char url[64];
++    SOCKET probe;
++    struct sockaddr_in sa;
++    BOOL already_open;
++
++    InitializeCriticalSection(&s_screen_cs);
++    GetModuleFileNameA(NULL, dir, sizeof(dir) - 1);
++    sep = strrchr(dir, '\\');
++    if (sep) *(sep + 1) = '\0'; else dir[0] = '\0';
++    setting_load(dir);
++    snprintf(s_html_path, sizeof(s_html_path), "%snethack_viewer.html", dir);
++    snprintf(s_dict_path, sizeof(s_dict_path), "%snethack_dict.json", dir);
++    html_patch_port();
++    dict_load();
++
++    /* Check if a server is already listening on the port (viewer open from a
++       previous run).  If connect() succeeds, skip opening the browser. */
++    probe = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
++    already_open = FALSE;
++    if (probe != INVALID_SOCKET) {
++        memset(&sa, 0, sizeof(sa));
++        sa.sin_family      = AF_INET;
++        sa.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
++        sa.sin_port        = htons((u_short)s_http_port);
++        if (connect(probe, (struct sockaddr *)&sa, sizeof(sa)) == 0)
++            already_open = TRUE;
++        closesocket(probe);
++    }
++
++    CreateThread(NULL, 0, http_server_thread, NULL, 0, NULL);
++
++    if (!already_open) {
++        snprintf(url, sizeof(url), "http://localhost:%d/", s_http_port);
++        ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOWNORMAL);
++    }
++}
++
++/* -------------------------------------------------------------------------
++ * Binary format sent to /data (base64url encoded):
++ *   Byte 0   : screen width  (uint8)
++ *   Byte 1   : screen height (uint8)
++ *   Byte 2   : cursor X      (uint8)
++ *   Byte 3   : cursor Y      (uint8)
++ *   Byte 4.. : RLE cell stream
++ *     Each run: [count-1 (uint8)] [cp_lo (uint8)] [cp_hi (uint8)] [attr (uint8)]
++ * ------------------------------------------------------------------------- */
++static void
++dump_screen_url(void)
++{
++    int total, i, outpos, b64len;
++    unsigned char *binbuf;
++    char *b64buf;
++    size_t binmax, b64max;
++
++    if (!console.back_buffer || console.width <= 0 || console.height <= 0)
++        return;
++
++    total  = console.width * console.height;
++    binmax = 5 + (size_t)total * 4;   /* +1 for flags byte */
++    b64max = (binmax * 4 / 3) + 8;
++
++    binbuf = (unsigned char *)malloc(binmax);
++    b64buf = (char *)malloc(b64max);
++    if (!binbuf || !b64buf) {
++        free(binbuf); free(b64buf); return;
++    }
++
++    binbuf[0] = (unsigned char)console.width;
++    binbuf[1] = (unsigned char)console.height;
++    binbuf[2] = (unsigned char)console.cursor.X;
++    binbuf[3] = (unsigned char)console.cursor.Y;
++    /* byte 4: flags  bit0=getlin mode (suppress per-char speech during line input) */
++    binbuf[4] = s_getlin_active ? 1 : 0;
++    outpos = 5;
++
++    i = 0;
++    while (i < total) {
++        cell_t *c = &console.back_buffer[i];
++        unsigned short cp =
++            (c->character == 0xFFFF || c->character == 0)
++                ? 32 : (unsigned short)c->character;
++        unsigned char attr = (unsigned char)(c->attribute & 0xFF);
++        int run = 1;
++        while (run < 256 && i + run < total) {
++            cell_t *nc = &console.back_buffer[i + run];
++            unsigned short ncp =
++                (nc->character == 0xFFFF || nc->character == 0)
++                    ? 32 : (unsigned short)nc->character;
++            unsigned char nattr = (unsigned char)(nc->attribute & 0xFF);
++            if (ncp != cp || nattr != attr) break;
++            run++;
++        }
++        binbuf[outpos++] = (unsigned char)(run - 1);
++        binbuf[outpos++] = (unsigned char)(cp & 0xFF);
++        binbuf[outpos++] = (unsigned char)((cp >> 8) & 0xFF);
++        binbuf[outpos++] = attr;
++        i += run;
++    }
++
++    b64len = b64url_encode(binbuf, outpos, b64buf, (int)b64max);
++    free(binbuf);
++    if (b64len >= 0)
++        http_data_set(b64buf, b64len);
++    free(b64buf);
++}
++
+ void
+ cmov(x, y)
+ register int x, y;
+@@ -1855,6 +2526,8 @@
+             set_altkeyhandling("ray");
+         }
+     }
++
++    http_server_start(); /* start viewer server at http://localhost:18080/ */
+ }
+ #endif /* TTY_GRAPHICS */
+ 
+
+----------------------------------------------------------------
+FILE: sys/winnt/windmain.c
+----------------------------------------------------------------
+--- C:\xampp\htdocs\nethack\nethack\nethack-367-src-original\NetHack-3.6.7\sys\winnt\windmain.c	2023-02-16 06:52:57.000000000 +0900
++++ C:\xampp\htdocs\nethack\nethack\nethack-367-src-edu\NetHack-3.6.7\sys\winnt\windmain.c	2026-04-24 09:43:54.246757500 +0900
+@@ -952,8 +952,8 @@
+     }
+ #else
+     DWORD length = GetModuleFileName((HANDLE) 0, path_buffer, MAX_PATH);
+-    if (length == ERROR_INSUFFICIENT_BUFFER) error("Unable to get module name");
+-    path_buffer[length] = '\0';
++    if (length == 0) error("Unable to get module name");
++    path_buffer[length < MAX_PATH ? length : MAX_PATH - 1] = '\0';
+ #endif
+ 
+     char  * seperator = strrchr(path_buffer, PATH_SEPARATOR);
+
+----------------------------------------------------------------
+FILE: win/tty/getline.c
+----------------------------------------------------------------
+--- C:\xampp\htdocs\nethack\nethack\nethack-367-src-original\NetHack-3.6.7\win\tty\getline.c	2023-02-16 06:52:57.000000000 +0900
++++ C:\xampp\htdocs\nethack\nethack\nethack-367-src-edu\NetHack-3.6.7\win\tty\getline.c	2026-04-25 15:00:19.119828200 +0900
+@@ -13,6 +13,10 @@
+ 
+ #include "wintty.h"
+ #include "func_tab.h"
++#ifdef WIN32
++extern void nttty_getlin_begin(void);
++extern void nttty_getlin_end(void);
++#endif
+ 
+ char morc = 0; /* tell the outside world what char you chose */
+ STATIC_VAR boolean suppress_history;
+@@ -57,6 +61,9 @@
+     cw->flags &= ~WIN_STOP;
+     ttyDisplay->toplin = 3; /* special prompt state */
+     ttyDisplay->inread++;
++#ifdef WIN32
++    nttty_getlin_begin();
++#endif
+ 
+     /* issue the prompt */
+     custompline(OVERRIDE_MSGTYPE | SUPPRESS_HISTORY, "%s ", query);
+@@ -195,6 +202,9 @@
+     }
+     ttyDisplay->toplin = 2; /* nonempty, no --More-- required */
+     ttyDisplay->inread--;
++#ifdef WIN32
++    nttty_getlin_end();
++#endif
+     clear_nhwindow(WIN_MESSAGE); /* clean up after ourselves */
+ 
+     if (suppress_history) {
+
+----------------------------------------------------------------
+FILE: win/tty/wintty.c
+----------------------------------------------------------------
+--- C:\xampp\htdocs\nethack\nethack\nethack-367-src-original\NetHack-3.6.7\win\tty\wintty.c	2023-02-16 06:52:57.000000000 +0900
++++ C:\xampp\htdocs\nethack\nethack\nethack-367-src-edu\NetHack-3.6.7\win\tty\wintty.c	2026-04-25 20:55:34.772757000 +0900
+@@ -449,6 +449,11 @@
+                                   (LI < 1 + ROWNO + 2) ? DISP_IN_GAME :
+ #endif
+                                    SET_IN_GAME);
++#ifdef WIN32
++    /* display top-ten list in a window so the screen viewer captures it */
++    iflags.toptenwin = TRUE;
++    set_option_mod_status("toptenwin", SET_IN_FILE);
++#endif
+ }
+ 
+ void
+
+----------------------------------------------------------------
+FILE: include/date.h
+----------------------------------------------------------------
+--- C:\xampp\htdocs\nethack\nethack\nethack-367-src-original\NetHack-3.6.7\include\date.h	2026-04-24 06:45:56.598467100 +0900
++++ C:\xampp\htdocs\nethack\nethack\nethack-367-src-edu\NetHack-3.6.7\include\date.h	2026-04-26 09:06:53.671924000 +0900
+@@ -1,6 +1,6 @@
+ /* This source file is generated by 'makedefs'.  Do not edit. */
+-#define BUILD_DATE "Fri Apr 24 06:45:56 2026"
+-#define BUILD_TIME (1776980756UL)
++#define BUILD_DATE "Sun Apr 26 09:06:53 2026"
++#define BUILD_TIME (1777162013UL)
+ 
+ #define VERSION_NUMBER 0x03060700UL
+ #define VERSION_FEATURES 0x00060000UL
+@@ -11,7 +11,7 @@
+ 
+ #define VERSION_STRING "3.6.7"
+ #define VERSION_ID \
+- "Windows NetHack Version 3.6.7 - last build Fri Apr 24 06:45:56 2026."
++ "Windows NetHack Version 3.6.7 - last build Sun Apr 26 09:06:53 2026."
+ #define COPYRIGHT_BANNER_C \
+- "         Version 3.6.7 Windows, built Apr 24 06:45:56 2026."
++ "         Version 3.6.7 Windows, built Apr 26 09:06:53 2026."
+ 
+
+----------------------------------------------------------------
+FILE: bin/Debug/x64/nethack_viewer.html  [NEW FILE]
+----------------------------------------------------------------
++ <!DOCTYPE html>
++ <html>
++ <head>
++   <meta charset="UTF-8">
++   <title>NetHack Screen</title>
++   <style>
++     * { box-sizing: border-box; margin: 0; padding: 0; }
++     body { background: #0c0c0c; display: flex; flex-direction: column;
++            align-items: flex-start; padding: 8px; }
++     #screen { font-family: 'Courier New', Courier, monospace;
++               font-size: 12px; line-height: 1;
++               letter-spacing: 0; }
++     .row { display: block; white-space: pre;
++            line-height: 1; overflow: hidden; }
++     #status { color: #555; font-family: monospace; font-size: 11px;
++               margin-top: 6px; }
++     .cursor { outline: 1px solid #fff; }
++ 
++     /* 辞書マッチ：下線 */
++     .dm { text-decoration: underline; text-decoration-color: #adf;
++           text-underline-offset: 2px; cursor: help; }
++ 
++     /* 辞書ツールチップ（最前面固定レイヤー） */
++     #jp-tooltip { position: fixed; z-index: 9999;
++                   background: #222; color: #adf; border: 1px solid #555;
++                   padding: 4px 10px; font-family: sans-serif; font-size: 13px;
++                   white-space: nowrap; pointer-events: none; display: none; }
++ 
++     /* 音声トグルボタン */
++     #speech-btn { position: fixed; bottom: 16px; right: 16px;
++                   background: #2a2a2a; color: #888; border: 1px solid #555;
++                   font-size: 13px; padding: 4px 12px; cursor: pointer;
++                   z-index: 1000; }
++     #speech-btn.on  { color: #16c60c; border-color: #16c60c; }
++     #speech-btn:hover { background: #3a3a3a; }
++ 
++     #bottom-left { position: fixed; bottom: 16px; left: 16px;
++                    display: flex; gap: 6px; z-index: 1000; }
++     #replay-btn, #readstatus-btn, #home-btn { background: #2a2a2a; color: #888; border: 1px solid #555;
++                   font-size: 13px; padding: 4px 12px; cursor: pointer; }
++     #replay-btn:hover:not(:disabled), #readstatus-btn:hover, #home-btn:hover { background: #3a3a3a; color: #fff; }
++     #replay-btn:disabled { color: #444; border-color: #333; cursor: default; }
++ 
++     #dict-form { display: flex; flex-direction: column; align-items: flex-start;
++                  gap: 6px; margin-top: 12px; }
++     #dict-form input { background: #1e1e1e; color: #ccc; border: 1px solid #444;
++                        font-family: monospace; font-size: 13px;
++                        padding: 3px 6px; height: 26px; width: 400px; }
++     #dict-form input::placeholder { color: #555; }
++     #other-row { display: flex; gap: 6px; align-items: center; width: 400px; }
++     #other-row input { flex: 1; width: auto; }
++     #other-lang { background: #1e1e1e; color: #ccc; border: 1px solid #444;
++                   font-family: monospace; font-size: 13px;
++                   padding: 3px 4px; height: 26px; cursor: pointer; }
++     #dict-btns { display: flex; align-items: center; gap: 6px; }
++     #dict-btns button { background: #2a2a2a; color: #aaa; border: 1px solid #555;
++                         font-size: 13px; padding: 0 10px; height: 26px;
++                         cursor: pointer; }
++     #dict-btns button:hover:not(:disabled) { background: #3a3a3a; color: #fff; }
++     #dict-btns button:disabled { color: #444; border-color: #333; cursor: default; }
++     #dict-msg { font-family: monospace; font-size: 12px; margin-left: 6px; }
++     #import-label { background: #2a2a2a; color: #aaa; border: 1px solid #555;
++                     font-size: 13px; padding: 0 10px; height: 26px; line-height: 26px;
++                     cursor: pointer; display: inline-block; }
++     #import-label:hover { background: #3a3a3a; color: #fff; }
++   </style>
++ </head>
++ <body>
++   <div id="jp-tooltip"></div>
++   <div id="screen"></div>
++   <div id="status">Waiting...</div>
++   <div id="dict-form">
++     <input id="en-input"    type="text" placeholder="English">
++     <input id="ja-input"    type="text" placeholder="日本語">
++     <div id="other-row">
++       <input id="other-input" type="text" placeholder="Other">
++       <select id="other-lang">
++         <option value="ja-JP">日本語</option>
++         <option value="en-US">English</option>
++         <option value="zh-CN">中文(简体)</option>
++         <option value="zh-TW">中文(繁體)</option>
++         <option value="ko-KR">한국어</option>
++         <option value="fr-FR">Français</option>
++         <option value="de-DE">Deutsch</option>
++         <option value="es-ES">Español</option>
++         <option value="it-IT">Italiano</option>
++         <option value="pt-BR">Português</option>
++       </select>
++     </div>
++     <div id="dict-btns">
++       <button id="reg-btn">Save</button>
++       <button id="speak-btn" disabled>Read</button>
++       <button id="export-btn">Export</button>
++       <label id="import-label">Import<input id="import-input" type="file" accept=".json,application/json" style="display:none"></label>
++       <button id="clear-dict-btn">Clear Dictionary</button>
++       <span id="dict-msg"></span>
++     </div>
++   </div>
++   <div id="bottom-left">
++     <button id="replay-btn">Read Again</button>
++     <button id="readstatus-btn">Read Status</button>
++     <button id="home-btn">Home</button>
++   </div>
++   <button id="speech-btn">Sound ON</button>
++ 
++   <script>
++     const SERVER = 'http://localhost:18080'; /* nethack.exe built-in HTTP server */
++ 
++     const PAL = [
++       '#0c0c0c','#0037da','#13a10e','#3a96dd',
++       '#c50f1f','#881798','#c19c00','#cccccc',
++       '#767676','#3b78ff','#16c60c','#61d6d6',
++       '#e74856','#b4009e','#f9f1a5','#f2f2f2'
++     ];
++ 
++     const POLL_MS = 400;
++     let lastText    = '';
++     let lastMsg     = '';   /* 前回の行0テキスト（読み上げ重複防止） */
++     let lastData    = null; /* 最後にレンダリングした画面データ */
++     let speechOn    = false;
++     let dictCache   = {};
++     let dictKeys    = [];   /* sorted longest-first */
++ 
++     /* ---- Web Speech API ---- */
++ 
++     /* Chrome は getVoices() が非同期。voiceschanged 後に取得する。 */
++     let voices = [];
++     function loadVoices() { voices = window.speechSynthesis.getVoices(); }
++     if (window.speechSynthesis) {
++       loadVoices();
++       window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
++     }
++ 
++     /* 言語コードに最適なボイスを選ぶ（完全一致→前方一致→null） */
++     function findVoice(lang) {
++       const lc = lang.toLowerCase();
++       return voices.find(v => v.lang.toLowerCase() === lc)
++           || voices.find(v => v.lang.toLowerCase().startsWith(lc.slice(0, 2)))
++           || null;
++     }
++ 
++     /* parts = [{text, lang} | {pause, ms}] を順番に発話。
++      * {pause: true, ms: N} は N ミリ秒待ってから次へ進む。
++      * 新しい speakSequential 呼び出し時に古いタイマーを世代番号で無効化する。 */
++     let speakGen = 0;
++     function speakSequential(parts) {
++       if (!window.speechSynthesis) return;
++       window.speechSynthesis.cancel();
++       const gen = ++speakGen;
++       function next(i) {
++         if (gen !== speakGen) return;   /* 新しい呼び出しで無効化済み */
++         if (i >= parts.length) return;
++         const part = parts[i];
++         if (part.pause) {
++           setTimeout(() => next(i + 1), part.ms || 1000);
++           return;
++         }
++         const utt  = new SpeechSynthesisUtterance(part.text);
++         utt.lang   = part.lang;
++         utt.rate   = 1.0;
++         const v    = findVoice(part.lang);
++         if (v) utt.voice = v;
++         utt.onend  = () => next(i + 1);
++         utt.onerror = () => next(i + 1);  /* エラーでも次へ進む */
++         window.speechSynthesis.speak(utt);
++         /* Chrome: speak 直後に pause 状態になることがある */
++         if (window.speechSynthesis.paused) window.speechSynthesis.resume();
++       }
++       next(0);
++     }
++ 
++     /* NetHack ステータス行を TTS 向けに変換（ステータス行のみ適用） */
++     function formatForSpeech(text) {
++       if (!/\bSt:\d/i.test(text) && !/\bDlvl:/i.test(text)) return text;
++       return text
++         .replace(/\bDlvl:/gi, 'DLEVEL')
++         .replace(/\$:/g,      'DOLLAR')
++         .replace(/\bSt:/gi,   'ST')
++         .replace(/\bDx:/gi,   'DX')
++         .replace(/\bCo:/gi,   'CO')
++         .replace(/\bIn:/gi,   'IN')
++         .replace(/\bWi:/gi,   'WI')
++         .replace(/\bCh:/gi,   'CH')
++         .replace(/\bHP:/gi,   'HP')
++         .replace(/\bPw:/gi,   'PW')
++         .replace(/\bAC:/gi,   'AC')
++         .replace(/\bXp:/gi,   'XP')
++         .replace(/\bT:/g,     'T');
++     }
++ 
++     /* テキストをスペース3つ以上で分割し、間に1秒ポーズを挟んだ parts 配列を返す */
++     function textToParts(text, lang) {
++       const segs = text.trim().split(/ {3,}/);
++       const parts = [];
++       segs.forEach((s, i) => {
++         const t = formatForSpeech(s.trim());
++         if (t) parts.push({ text: t, lang });
++         if (i < segs.length - 1) parts.push({ pause: true, ms: 1000 });
++       });
++       return parts.length ? parts : [];
++     }
++ 
++     /* ゲーム画面の自動読み上げ（英語のみ） */
++     function speak(text) {
++       if (!speechOn || !text.trim()) return;
++       speakSequential(textToParts(text.trim(), 'en-US'));
++     }
++ 
++     /* 1行分のテキストを抽出 */
++     function extractRowText(cells, w, row) {
++       return cells.slice(row * w, (row + 1) * w)
++         .map(([cp]) => (cp === 0 || cp === 32) ? ' ' : String.fromCodePoint(cp))
++         .join('').trimEnd();
++     }
++ 
++     /* 読み上げ用メッセージを取得。
++      * --More-- → その行まで結合して --More-- 除去。
++      * (end) あり → 全非空行結合（ページ表示メニュー）。
++      * 行0が空 → 全非空行結合（起動画面など）。
++      * それ以外 → 行0のみ。
++      * 戻り値: {text, key} */
++     function extractSpeechText(cells, w, h) {
++       for (let y = 0; y < h; y++) {
++         const row = extractRowText(cells, w, y);
++         const mi  = row.indexOf('--More--');
++         if (mi !== -1) {
++           const lines = [];
++           for (let r = 0; r <= y; r++)
++             lines.push(extractRowText(cells, w, r));
++           const full = lines.join(' ');
++           const cut  = full.slice(0, full.indexOf('--More--')).trim();
++           return { text: cut, key: cut };
++         }
++       }
++       /* (end) の有無を確認 */
++       let hasEnd = false;
++       for (let y = 0; y < h; y++) {
++         if (extractRowText(cells, w, y).indexOf('(end)') !== -1) { hasEnd = true; break; }
++       }
++       const row0 = extractRowText(cells, w, 0);
++       /* (end) あり（メニュー）→ 全非空行を結合（ステータス行・(end) は除去） */
++       if (hasEnd) {
++         const lines = [];
++         for (let y = 0; y < h; y++) {
++           const row = extractRowText(cells, w, y);
++           if (!row || isStatusRow(row)) continue;
++           const cleaned = row.replace(/\(end\)\s*$/, '').trimEnd();
++           if (cleaned) lines.push(cleaned.trim());
++         }
++         const text = lines.join('  ');
++         return { text, key: text };
++       }
++       /* 行0に内容あり → 行0のみ読む */
++       if (row0) return { text: row0, key: row0 };
++       /* 行0が空でメッセージなし（移動後など）→ 無音 */
++       return { text: '', key: '' };
++     }
++ 
++     /* ---- Read Again ボタン ---- */
++     document.getElementById('replay-btn').addEventListener('click', () => {
++       if (!lastData) return;
++       const { w, h, cells } = lastData;
++       let toSpeak = extractSpeechText(cells, w, h).text;
++       if (!toSpeak) {
++         /* 行0が空（起動画面など）→ 全非空・非ステータス行を結合して読む */
++         const lines = [];
++         for (let y = 0; y < h; y++) {
++           const row = extractRowText(cells, w, y).trim();
++           if (row && !isStatusRow(row)) lines.push(row);
++         }
++         toSpeak = lines.join('  ');
++       }
++       if (toSpeak) speakSequential(textToParts(toSpeak, 'en-US'));
++     });
++ 
++     /* ---- Read Status ボタン ---- */
++     document.getElementById('readstatus-btn').addEventListener('click', () => {
++       if (!lastData) return;
++       const { w, h, cells } = lastData;
++       const statusRows = [];
++       for (let y = 0; y < h; y++) {
++         const row = extractRowText(cells, w, y);
++         if (isStatusRow(row)) statusRows.push(row);
++       }
++       if (statusRows.length)
++         speakSequential(textToParts(statusRows.join('  '), 'en-US'));
++     });
++ 
++     /* ---- Home ボタン ---- */
++     document.getElementById('home-btn').addEventListener('click', () => {
++       document.getElementById('screen').innerHTML = '';
++       document.getElementById('status').textContent = '';
++       lastText = '';
++       lastMsg  = '';
++     });
++ 
++     /* ---- 音声トグルボタン ---- */
++     const speechBtn = document.getElementById('speech-btn');
++     const replayBtn = document.getElementById('replay-btn');
++     speechBtn.addEventListener('click', () => {
++       speechOn = !speechOn;
++       speechBtn.textContent = speechOn ? 'Sound OFF' : 'Sound ON';
++       speechBtn.classList.toggle('on', speechOn);
++       /* replayBtn は Sound ON/OFF に関わらず常に有効 */
++       document.getElementById('speak-btn').disabled = !speechOn;
++       if (!speechOn) {
++         speakGen++;                                      /* タイマー残りを無効化 */
++         window.speechSynthesis && window.speechSynthesis.cancel();
++       }
++     });
++ 
++     /* ---- 辞書 ---- */
++     function dictApply(data) {
++       dictCache = data;
++       dictKeys  = Object.keys(dictCache).sort((a, b) => b.length - a.length);
++     }
++ 
++     async function loadDict() {
++       /* まず localStorage から読み込む */
++       try {
++         const stored = localStorage.getItem('nethack_dict');
++         if (stored) dictApply(JSON.parse(stored));
++       } catch (_) {}
++       /* サーバが動いていれば同期（失敗しても無視） */
++       try {
++         const res = await fetch(SERVER + '/dict.json?_=' + Date.now());
++         if (res.ok) {
++           const data = await res.json();
++           dictApply(data);
++           localStorage.setItem('nethack_dict', JSON.stringify(data));
++         }
++       } catch (_) {}
++     }
++ 
++     /* Export: dictCache を nethack_dict.json としてダウンロード */
++     document.getElementById('export-btn').addEventListener('click', () => {
++       const json = JSON.stringify(dictCache, null, 2);
++       const blob = new Blob([json], { type: 'application/json' });
++       const a    = document.createElement('a');
++       a.href     = URL.createObjectURL(blob);
++       a.download = 'nethack_dict.json';
++       a.click();
++       URL.revokeObjectURL(a.href);
++     });
++ 
++     /* Import: JSON ファイルを読み込んで既存エントリに追記（上書きではなくマージ） */
++     document.getElementById('import-input').addEventListener('change', (e) => {
++       const file = e.target.files[0];
++       if (!file) return;
++       const reader = new FileReader();
++       reader.onload = (ev) => {
++         const msg = document.getElementById('dict-msg');
++         try {
++           const incoming = JSON.parse(ev.target.result);
++           const merged = Object.assign({}, dictCache, incoming);
++           dictApply(merged);
++           localStorage.setItem('nethack_dict', JSON.stringify(merged));
++           msg.style.color = '#16c60c';
++           msg.textContent = `インポートしました（計 ${Object.keys(merged).length} 件）`;
++         } catch (_) {
++           msg.style.color = '#e74856';
++           msg.textContent = 'JSONの解析に失敗しました';
++         }
++         e.target.value = '';
++       };
++       reader.readAsText(file);
++     });
++ 
++     /* Clear Dictionary */
++     document.getElementById('clear-dict-btn').addEventListener('click', () => {
++       const count = Object.keys(dictCache).length;
++       if (!confirm(`辞書を完全に消去します（${count} 件）。\nよろしいですか？`)) return;
++       dictCache = {};
++       dictKeys  = [];
++       localStorage.removeItem('nethack_dict');
++       const msg = document.getElementById('dict-msg');
++       msg.style.color = '#e74856';
++       msg.textContent = '辞書を消去しました';
++     });
++ 
++     /* エントリ（文字列 or {ja,other} オブジェクト）をツールチップ文字列に変換 */
++     function entryToTip(entry) {
++       if (typeof entry === 'string') return entry;   /* 旧形式 */
++       let tip = entry.ja || '';
++       if (entry.other) tip += (tip ? ' ' : '') + '[' + entry.other + ']';
++       return tip;
++     }
++ 
++     function annotate(rowCells, w) {
++       if (dictKeys.length === 0) return new Array(w).fill(null);
++       const text  = rowCells.map(([cp]) =>
++         (cp === 0 || cp === 32) ? ' ' : String.fromCodePoint(cp)).join('');
++       const lower = text.toLowerCase();
++       const tips  = new Array(w).fill(null);
++       for (const key of dictKeys) {
++         const tip = entryToTip(dictCache[key]);
++         if (!tip) continue;
++         let p = 0;
++         while (p + key.length <= w) {
++           const idx = lower.indexOf(key, p);
++           if (idx === -1) break;
++           let overlap = false;
++           for (let i = idx; i < idx + key.length; i++) if (tips[i]) { overlap = true; break; }
++           if (!overlap)
++             for (let i = idx; i < idx + key.length; i++) tips[i] = tip;
++           p = idx + 1;
++         }
++       }
++       return tips;
++     }
++ 
++     function escAttr(s) {
++       return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
++     }
++     function escHtml(s) {
++       return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
++     }
++ 
++     /* ステータス行（下2行）かどうかの判定 */
++     function isStatusRow(row) {
++       return /\bSt:\d/i.test(row) || /\bDlvl:/i.test(row);
++     }
++ 
++     function renderScreen(data) {
++       lastData = data;
++       const { w, h, cx, cy, cells, lineInput } = data;
++ 
++       /* 行入力中（文字入力ごとに画面更新される）は読み上げ・lastMsg更新をスキップ。
++        * Enterが押されて行入力が終わると lineInput=false になり、
++        * speechKey !== lastMsg が成立して次の画面が読み上げられる。 */
++       if (!lineInput) {
++         const { text: speechText, key: speechKey } = extractSpeechText(cells, w, h);
++         if (speechKey !== lastMsg) {
++           speak(speechText);
++           lastMsg = speechKey;
++         } else {
++           /* 行0は変わっていないが画面が変化した場合（例: 著作権画面に "Who are you?" が追加）
++            * ? で終わるプロンプト行が新たに現れていれば読み上げる */
++           for (let y = h - 1; y >= 0; y--) {
++             const row = extractRowText(cells, w, y).trim();
++             if (row && !isStatusRow(row) && row.endsWith('?') && row !== lastMsg) {
++               speak(row);
++               lastMsg = row;
++               break;
++             }
++           }
++         }
++       }
++ 
++       const rows = [];
++       for (let y = 0; y < h; y++) {
++         const rc  = cells.slice(y * w, (y + 1) * w);
++         const ann = annotate(rc, w);
++ 
++         let html    = '';
++         let curAttr = -1;
++         let curJa   = undefined;
++         let inMatch = false;
++ 
++         const closeColor = () => { if (curAttr !== -1) { html += '</span>'; curAttr = -1; } };
++         const closeMatch = () => { if (inMatch) { html += '</span>'; inMatch = false; curJa = null; } };
++         const openColor  = (a) => {
++           html += `<span style="color:${PAL[a&0xf]};background:${PAL[(a>>4)&0xf]}">`;
++           curAttr = a;
++         };
++         const openMatch  = (j) => {
++           html += `<span class="dm" data-tip="${escAttr(j)}">`;
++           inMatch = true; curJa = j;
++         };
++ 
++         for (let x = 0; x < w; x++) {
++           const [cp, attr] = rc[x];
++           const ja = ann[x];
++           const ch = (cp === 0 || cp === 32)
++                      ? '\u00a0' : escHtml(String.fromCodePoint(cp));
++ 
++           if (x === cx && y === cy) {
++             closeColor(); closeMatch();
++             html += `<span class="cursor" style="color:${PAL[attr&0xf]};background:${PAL[(attr>>4)&0xf]}">${ch}</span>`;
++             continue;
++           }
++           if (ja !== curJa) {
++             closeColor(); closeMatch();
++             if (ja) openMatch(ja);
++             curJa = ja;
++           }
++           if (attr !== curAttr) { closeColor(); openColor(attr); }
++           html += ch;
++         }
++         closeColor(); closeMatch();
++         rows.push(`<span class="row">${html}</span>`);
++       }
++ 
++       document.getElementById('screen').innerHTML = rows.join('');
++     }
++ 
++     /* ---- base64url decode → Uint8Array ---- */
++     function b64urlToBytes(str) {
++       const rem = str.length % 4;
++       if (rem === 2) str += '==';
++       else if (rem === 3) str += '=';
++       const b64 = str.replace(/-/g, '+').replace(/_/g, '/');
++       const bin = atob(b64);
++       const out = new Uint8Array(bin.length);
++       for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
++       return out;
++     }
++ 
++     /*
++      * Binary format (see nttty.c dump_screen_url):
++      *   [0] w  [1] h  [2] cx  [3] cy
++      *   [4] flags: bit0 = line-input mode (inread > 0)
++      *   then RLE stream: [count-1][cp_lo][cp_hi][attr] per run
++      */
++     function decompressScreen(encoded) {
++       try {
++         const bytes = b64urlToBytes(encoded);
++         if (bytes.length < 4) return null;
++         const w = bytes[0], h = bytes[1], cx = bytes[2], cy = bytes[3];
++         const lineInput = bytes.length >= 5 ? (bytes[4] & 1) !== 0 : false;
++         const cells = [];
++         let pos = 5;
++         while (pos + 4 <= bytes.length) {
++           const count = bytes[pos] + 1;
++           const cp    = bytes[pos + 1] | (bytes[pos + 2] << 8);
++           const attr  = bytes[pos + 3];
++           pos += 4;
++           for (let i = 0; i < count; i++) cells.push([cp, attr]);
++         }
++         if (cells.length !== w * h) return null;
++         return { w, h, cx, cy, cells, lineInput };
++       } catch (_) { return null; }
++     }
++ 
++     let refreshBusy = false;
++     async function refresh() {
++       if (refreshBusy) return;   /* 前のポーリングが完了するまで次を起動しない */
++       refreshBusy = true;
++       try {
++         const res = await fetch(SERVER + '/data?_=' + Date.now());
++         if (!res.ok) {
++           document.getElementById('status').textContent = 'Waiting... (HTTP ' + res.status + ')';
++           return;
++         }
++         const text = (await res.text()).trim();
++         if (text === lastText) return;
++         const data = decompressScreen(text);
++         if (!data) {
++           document.getElementById('status').textContent = 'Waiting...';
++           return;
++         }
++         lastText = text;
++         renderScreen(data);
++         history.replaceState(null, '', '?d=' + text);
++         document.getElementById('status').textContent =
++           `${data.w}x${data.h}  cursor(${data.cx},${data.cy})  `
++           + new Date().toLocaleTimeString();
++       } catch (e) {
++         document.getElementById('status').textContent = 'Waiting... (' + e.message + ')';
++       } finally {
++         refreshBusy = false;
++       }
++     }
++ 
++     /* ---- Read ボタン：フォーム欄の内容を順に読み上げ ---- */
++     document.getElementById('speak-btn').addEventListener('click', () => {
++       const otherLang = document.getElementById('other-lang').value || 'ja-JP';
++       const parts = [
++         { text: document.getElementById('en-input').value.trim(),    lang: 'en-US'    },
++         { text: document.getElementById('ja-input').value.trim(),    lang: 'ja-JP'    },
++         { text: document.getElementById('other-input').value.trim(), lang: otherLang  },
++       ].filter(p => p.text);
++       if (parts.length) speakSequential(parts);
++     });
++ 
++     /* ---- 辞書入力フォーム ---- */
++     document.getElementById('en-input').addEventListener('input', () => {
++       const key   = document.getElementById('en-input').value.trim().toLowerCase();
++       const entry = key ? dictCache[key] : null;
++       if (entry && typeof entry === 'string') {
++         /* 旧形式 */
++         document.getElementById('ja-input').value    = entry;
++         document.getElementById('other-input').value = '';
++         document.getElementById('other-lang').value  = 'ja-JP';
++       } else if (entry && typeof entry === 'object') {
++         document.getElementById('ja-input').value    = entry.ja         || '';
++         document.getElementById('other-input').value = entry.other      || '';
++         document.getElementById('other-lang').value  = entry.other_lang || 'ja-JP';
++       } else {
++         document.getElementById('ja-input').value    = '';
++         document.getElementById('other-input').value = '';
++         document.getElementById('other-lang').value  = 'ja-JP';
++       }
++     });
++ 
++     document.getElementById('reg-btn').addEventListener('click', async () => {
++       const en         = document.getElementById('en-input').value.trim();
++       const ja         = document.getElementById('ja-input').value.trim();
++       const other      = document.getElementById('other-input').value.trim();
++       const other_lang = document.getElementById('other-lang').value;
++       const msg        = document.getElementById('dict-msg');
++       if (!en || (!ja && !other)) {
++         msg.style.color = '#e74856';
++         msg.textContent = '英語と、日本語またはその他のどちらかを入力してください';
++         return;
++       }
++       /* localStorage に保存（サーバ不要） */
++       dictCache[en.toLowerCase()] = { ja, other, other_lang };
++       dictKeys = Object.keys(dictCache).sort((a, b) => b.length - a.length);
++       localStorage.setItem('nethack_dict', JSON.stringify(dictCache));
++       msg.style.color = '#16c60c';
++       msg.textContent = `登録しました（計 ${Object.keys(dictCache).length} 件）`;
++       document.getElementById('en-input').value    = '';
++       document.getElementById('ja-input').value    = '';
++       document.getElementById('other-input').value = '';
++       document.getElementById('other-lang').value  = 'ja-JP';
++       /* サーバが動いていれば同期（失敗しても無視） */
++       try {
++         const form = new URLSearchParams({ en, ja, other, other_lang });
++         await fetch(SERVER + '/dict.json', {
++           method: 'POST',
++           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
++           body: form.toString()
++         });
++       } catch (_) {}
++     });
++ 
++     /* ---- ツールチップ ---- */
++     const tooltip = document.getElementById('jp-tooltip');
++     document.getElementById('screen').addEventListener('mousemove', (e) => {
++       const dm = e.target.closest('.dm');
++       if (dm) {
++         tooltip.textContent = dm.dataset.tip;
++         tooltip.style.display = 'block';
++         tooltip.style.left = e.clientX + 'px';
++         tooltip.style.top  = (e.clientY + 18) + 'px';
++       } else {
++         tooltip.style.display = 'none';
++       }
++     });
++     document.getElementById('screen').addEventListener('mouseleave', () => {
++       tooltip.style.display = 'none';
++     });
++ 
++     /* ---- 単語クリック：入力欄へのコピー＋辞書情報の復元 ---- */
++     function fillDictInputs(word) {
++       const key   = word.toLowerCase();
++       const entry = dictCache[key];
++       document.getElementById('en-input').value = word;
++       if (entry && typeof entry === 'string') {
++         document.getElementById('ja-input').value    = entry;
++         document.getElementById('other-input').value = '';
++         document.getElementById('other-lang').value  = 'ja-JP';
++       } else if (entry && typeof entry === 'object') {
++         document.getElementById('ja-input').value    = entry.ja         || '';
++         document.getElementById('other-input').value = entry.other      || '';
++         document.getElementById('other-lang').value  = entry.other_lang || 'ja-JP';
++       } else {
++         document.getElementById('ja-input').value    = '';
++         document.getElementById('other-input').value = '';
++         document.getElementById('other-lang').value  = 'ja-JP';
++       }
++     }
++ 
++     /* ---- 単語読み上げ（クリック／タップ） ---- */
++     function speakWord(word) {
++       if (!word) return;
++       speakSequential([{ text: word.trim(), lang: 'en-US' }]);
++     }
++ 
++     function wordAtPoint(x, y) {
++       let node, offset;
++       if (document.caretPositionFromPoint) {
++         const pos = document.caretPositionFromPoint(x, y);
++         if (!pos) return '';
++         node = pos.offsetNode; offset = pos.offset;
++       } else if (document.caretRangeFromPoint) {
++         const r = document.caretRangeFromPoint(x, y);
++         if (!r) return '';
++         node = r.startContainer; offset = r.startOffset;
++       } else { return ''; }
++       if (node.nodeType !== Node.TEXT_NODE) return '';
++       const text = node.textContent;
++       /*  （描画上の空白）は単語区切りとして扱う */
++       const isWord = (c) => c !== ' ' && /\S/.test(c);
++       let s = offset, e = offset;
++       while (s > 0 && isWord(text[s - 1])) s--;
++       while (e < text.length && isWord(text[e])) e++;
++       return text.slice(s, e);
++     }
++ 
++     const scr = document.getElementById('screen');
++ 
++     /* クリック／タップで単語を読み上げ。
++      * touchend で先に処理し、直後に発火する click をスキップする。 */
++     let touchJustFired = false;
++     scr.addEventListener('touchend', (e) => {
++       if (e.changedTouches.length !== 1) return;
++       touchJustFired = true;
++       setTimeout(() => { touchJustFired = false; }, 500);
++       const t    = e.changedTouches[0];
++       const word = wordAtPoint(t.clientX, t.clientY);
++       if (!word) return;
++       fillDictInputs(word);
++       if (speechOn) speakWord(word);
++     }, { passive: true });
++ 
++     scr.addEventListener('click', (e) => {
++       if (touchJustFired) return;
++       const word = wordAtPoint(e.clientX, e.clientY);
++       if (!word) return;
++       fillDictInputs(word);
++       if (speechOn) speakWord(word);
++     });
++ 
++     /* If opened with ?d=..., render the snapshot immediately */
++     (function() {
++       const d = new URLSearchParams(window.location.search).get('d');
++       if (!d) return;
++       const data = decompressScreen(d);
++       if (!data) return;
++       renderScreen(data);
++       lastText = d;
++       document.getElementById('status').textContent =
++         `${data.w}x${data.h}  cursor(${data.cx},${data.cy})  [snapshot]`;
++     })();
++ 
++     loadDict();
++     refresh();
++     setInterval(refresh, POLL_MS);
++     /* Chrome workaround: TTS が pause 状態で止まることがある */
++     setInterval(() => {
++       if (window.speechSynthesis && window.speechSynthesis.paused)
++         window.speechSynthesis.resume();
++     }, 5000);
++   </script>
++ </body>
++ </html>
+

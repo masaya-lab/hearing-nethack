@@ -1,0 +1,22 @@
+# Claude Code session data
+.claude/
+
+# Visual Studio build artifacts
+bin/Debug/
+bin/Release/
+tools/Debug/
+tools/Release/
+win/win32/vs2017/obj/
+win/win32/vs2017/.vs/
+
+# Runtime-generated files
+NetHack-3.6.7/bin/Debug/x64/record
+NetHack-3.6.7/bin/Debug/x64/save/
+NetHack-3.6.7/bin/Debug/x64/nethack_screen.json
+NetHack-3.6.7/bin/Debug/x64/setting.ini
+NetHack-3.6.7/bin/Debug/x64/nethack_dict.json
+NetHack-3.6.7/bin/Debug/x64/translation.json
+NetHack-3.6.7/bin/Debug/x64/save_translation.php
+
+# Installer output
+NetHack-3.6.7/installer/output/

@@ -1,0 +1,114 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\xampp\\htdocs\\nethack\\nethack\\nethack-367-src-edu\\NetHack-3.6.7\\win\\win32\\vs2017\\NetHackPackage.wapproj": {}
+  },
+  "projects": {
+    "C:\\xampp\\htdocs\\nethack\\nethack\\nethack-367-src-edu\\NetHack-3.6.7\\win\\win32\\vs2017\\NetHackPackage.wapproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\xampp\\htdocs\\nethack\\nethack\\nethack-367-src-edu\\NetHack-3.6.7\\win\\win32\\vs2017\\NetHackPackage.wapproj",
+        "projectName": "NetHackPackage",
+        "projectPath": "C:\\xampp\\htdocs\\nethack\\nethack\\nethack-367-src-edu\\NetHack-3.6.7\\win\\win32\\vs2017\\NetHackPackage.wapproj",
+        "packagesPath": "C:\\Users\\akhrm\\.nuget\\packages\\",
+        "outputPath": "C:\\xampp\\htdocs\\nethack\\nethack\\nethack-367-src-edu\\NetHack-3.6.7\\win\\win32\\vs2017\\obj\\",
+        "projectStyle": "PackageReference",
+        "UsingMicrosoftNETSdk": false,
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\akhrm\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net451"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net451": {
+            "framework": "uap10.0.15063",
+            "targetAlias": "net451",
+            "projectReferences": {
+              "C:\\xampp\\htdocs\\nethack\\nethack\\nethack-367-src-edu\\NetHack-3.6.7\\win\\win32\\vs2017\\NetHackW.vcxproj": {
+                "projectPath": "C:\\xampp\\htdocs\\nethack\\nethack\\nethack-367-src-edu\\NetHack-3.6.7\\win\\win32\\vs2017\\NetHackW.vcxproj"
+              }
+            }
+          }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.200"
+      },
+      "frameworks": {
+        "net451": {
+          "framework": "uap10.0.15063",
+          "targetAlias": "net451",
+          "imports": [
+            "netcoreapp3.1",
+            "netcoreapp3.0",
+            "netcoreapp2.0",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481",
+            "net11.0-windows10.0.17763"
+          ],
+          "assetTargetFallback": true,
+          "warn": true
+        }
+      },
+      "runtimes": {
+        "win10-arm": {
+          "#import": []
+        },
+        "win10-arm-aot": {
+          "#import": []
+        },
+        "win10-arm64-aot": {
+          "#import": []
+        },
+        "win10-x64": {
+          "#import": []
+        },
+        "win10-x64-aot": {
+          "#import": []
+        },
+        "win10-x86": {
+          "#import": []
+        },
+        "win10-x86-aot": {
+          "#import": []
+        }
+      }
+    },
+    "C:\\xampp\\htdocs\\nethack\\nethack\\nethack-367-src-edu\\NetHack-3.6.7\\win\\win32\\vs2017\\NetHackW.vcxproj": {
+      "restore": {
+        "projectUniqueName": "C:\\xampp\\htdocs\\nethack\\nethack\\nethack-367-src-edu\\NetHack-3.6.7\\win\\win32\\vs2017\\NetHackW.vcxproj",
+        "projectName": "NetHackW",
+        "projectPath": "C:\\xampp\\htdocs\\nethack\\nethack\\nethack-367-src-edu\\NetHack-3.6.7\\win\\win32\\vs2017\\NetHackW.vcxproj",
+        "UsingMicrosoftNETSdk": false,
+        "frameworks": {
+          "native": {
+            "framework": "native",
+            "projectReferences": {}
+          }
+        }
+      },
+      "frameworks": {
+        "native": {
+          "framework": "native"
+        }
+      }
+    }
+  }
+}
