@@ -1099,6 +1099,16 @@ html_patch_port(void)
     free(newbuf);
 }
 
+static DWORD WINAPI
+http_ticker_thread(LPVOID lpParam)
+{
+    while (1) {
+        Sleep(500);
+        dump_screen_url();
+    }
+    return 0;
+}
+
 static void
 http_server_start(void)
 {
@@ -1133,6 +1143,7 @@ http_server_start(void)
     }
 
     CreateThread(NULL, 0, http_server_thread, NULL, 0, NULL);
+    CreateThread(NULL, 0, http_ticker_thread, NULL, 0, NULL); /* 教育用：定期更新スレッド */
 
     if (!already_open) {
         snprintf(url, sizeof(url), "http://localhost:%d/", s_http_port);
@@ -1156,42 +1167,80 @@ dump_screen_url(void)
     unsigned char *binbuf;
     char *b64buf;
     size_t binmax, b64max;
+    CHAR_INFO *con_info = NULL;
 
     if (!console.back_buffer || console.width <= 0 || console.height <= 0)
         return;
 
     total  = console.width * console.height;
-    binmax = 5 + (size_t)total * 4;   /* +1 for flags byte */
+    binmax = 5 + (size_t)total * 4;
     b64max = (binmax * 4 / 3) + 8;
 
     binbuf = (unsigned char *)malloc(binmax);
     b64buf = (char *)malloc(b64max);
     if (!binbuf || !b64buf) {
-        free(binbuf); free(b64buf); return;
+        if (binbuf) free(binbuf);
+        if (b64buf) free(b64buf);
+        return;
     }
 
     binbuf[0] = (unsigned char)console.width;
     binbuf[1] = (unsigned char)console.height;
     binbuf[2] = (unsigned char)console.cursor.X;
     binbuf[3] = (unsigned char)console.cursor.Y;
-    /* byte 4: flags  bit0=getlin mode (suppress per-char speech during line input) */
     binbuf[4] = s_getlin_active ? 1 : 0;
     outpos = 5;
+
+    if (console.hConOut) {
+        COORD buf_size;
+        COORD buf_coord;
+        SMALL_RECT read_rect;
+        buf_size.X = (short)console.width;
+        buf_size.Y = (short)console.height;
+        buf_coord.X = 0;
+        buf_coord.Y = 0;
+        read_rect.Left = 0;
+        read_rect.Top = 0;
+        read_rect.Right = (short)(console.width - 1);
+        read_rect.Bottom = (short)(console.height - 1);
+
+        con_info = (CHAR_INFO *)malloc(sizeof(CHAR_INFO) * total);
+        if (con_info) {
+            if (!ReadConsoleOutputW(console.hConOut, con_info, buf_size, buf_coord, &read_rect)) {
+                free(con_info);
+                con_info = NULL;
+            }
+        }
+    }
 
     i = 0;
     while (i < total) {
         cell_t *c = &console.back_buffer[i];
-        unsigned short cp =
-            (c->character == 0xFFFF || c->character == 0)
-                ? 32 : (unsigned short)c->character;
-        unsigned char attr = (unsigned char)(c->attribute & 0xFF);
+        unsigned short cp;
+        unsigned char attr;
+        
+        if (con_info && con_info[i].Char.UnicodeChar != 0 && con_info[i].Char.UnicodeChar != ' ') {
+            cp = con_info[i].Char.UnicodeChar;
+            attr = (unsigned char)(con_info[i].Attributes & 0xFF);
+        } else {
+            cp = (c->character == 0xFFFF || c->character == 0) ? 32 : (unsigned short)c->character;
+            attr = (unsigned char)(c->attribute & 0xFF);
+        }
+
         int run = 1;
         while (run < 256 && i + run < total) {
             cell_t *nc = &console.back_buffer[i + run];
-            unsigned short ncp =
-                (nc->character == 0xFFFF || nc->character == 0)
-                    ? 32 : (unsigned short)nc->character;
-            unsigned char nattr = (unsigned char)(nc->attribute & 0xFF);
+            unsigned short ncp;
+            unsigned char nattr;
+            
+            if (con_info && con_info[i+run].Char.UnicodeChar != 0 && con_info[i+run].Char.UnicodeChar != ' ') {
+                ncp = con_info[i+run].Char.UnicodeChar;
+                nattr = (unsigned char)(con_info[i+run].Attributes & 0xFF);
+            } else {
+                ncp = (nc->character == 0xFFFF || nc->character == 0) ? 32 : (unsigned short)nc->character;
+                nattr = (unsigned char)(nc->attribute & 0xFF);
+            }
+
             if (ncp != cp || nattr != attr) break;
             run++;
         }
@@ -1201,6 +1250,7 @@ dump_screen_url(void)
         binbuf[outpos++] = attr;
         i += run;
     }
+    if (con_info) free(con_info);
 
     b64len = b64url_encode(binbuf, outpos, b64buf, (int)b64max);
     free(binbuf);

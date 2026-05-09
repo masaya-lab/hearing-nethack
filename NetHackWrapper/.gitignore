@@ -1,0 +1,15 @@
+# .gitignore for NetHackWrapper
+
+# Build results
+[Bb]in/
+[Ob]j/
+
+# Visual Studio files
+.vs/
+*.user
+*.suo
+*.sln.docstates
+
+# WebView2 files
+*.WebView2/
+EBWebView/

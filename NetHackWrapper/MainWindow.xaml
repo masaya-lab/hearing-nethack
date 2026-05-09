@@ -1,0 +1,26 @@
+<Window x:Class="NetHackWrapper.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:NetHackWrapper"
+        mc:Ignorable="d"
+        Title="NetHack 管理ツール" Height="250" Width="400"
+        Background="#1E1E1E"
+        Closing="Window_Closing">
+    <Grid>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+            <TextBlock Text="NetHack 管理ツール" Foreground="White" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,30"/>
+            
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button Name="btnStart" Content="起動 (Start)" Width="120" Height="50" Margin="10"
+                        Click="BtnStart_Click" Background="#2D5A27" Foreground="White" FontWeight="Bold"/>
+                
+                <Button Name="btnStop" Content="停止 (Stop)" Width="120" Height="50" Margin="10"
+                        Click="BtnStop_Click" IsEnabled="False" Background="#7A2D2D" Foreground="White" FontWeight="Bold"/>
+            </StackPanel>
+            
+            <TextBlock Name="txtStatus" Text="ステータス: 停止中" Foreground="#AAA" HorizontalAlignment="Center"/>
+        </StackPanel>
+    </Grid>
+</Window>

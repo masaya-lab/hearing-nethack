@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "brOcLmB0j9w=",
+  "success": true,
+  "projectFilePath": "C:\\xampp\\htdocs\\nethack\\nethack\\nethack-367-src-edu\\NetHackWrapper\\NetHackWrapper.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\akhrm\\.nuget\\packages\\microsoft.web.webview2\\1.0.3912.50\\microsoft.web.webview2.1.0.3912.50.nupkg.sha512",
+    "C:\\Users\\akhrm\\.nuget\\packages\\system.speech\\10.0.7\\system.speech.10.0.7.nupkg.sha512"
+  ],
+  "logs": []
+}
