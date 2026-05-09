@@ -1,0 +1,866 @@
+[
+  {
+    "language": "English",
+    "message": "You see here a scroll labeled XOR OTA."
+  },
+  {
+    "language": "English",
+    "message": "The little dog picks up a scroll labeled XOR OTA."
+  },
+  {
+    "language": "English",
+    "message": "You see here a white potion."
+  },
+  {
+    "language": "English",
+    "message": "The little dog drops a scroll labeled XOR OTA."
+  },
+  {
+    "language": "English",
+    "message": "i - a white potion."
+  },
+  {
+    "language": "English",
+    "message": "You swap places with your little dog."
+  },
+  {
+    "language": "English",
+    "message": "You see here a scroll labeled XOR OTA."
+  },
+  {
+    "language": "English",
+    "message": "j - a scroll labeled XOR OTA."
+  },
+  {
+    "language": "English",
+    "message": "You see here a statue of a grid bug."
+  },
+  {
+    "language": "English",
+    "message": "You try to move the boulder, but in vain."
+  },
+  {
+    "language": "English",
+    "message": "You swap places with your little dog."
+  },
+  {
+    "language": "English",
+    "message": "Things that are here:                                          a jackal corpse                                          7 darts"
+  },
+  {
+    "language": "English",
+    "message": "You hit the jackal."
+  },
+  {
+    "language": "English",
+    "message": "You kill the jackal!"
+  },
+  {
+    "language": "English",
+    "message": "You see here 2 melons."
+  },
+  {
+    "language": "English",
+    "message": "k - 2 melons."
+  },
+  {
+    "language": "English",
+    "message": "The door opens."
+  },
+  {
+    "language": "English",
+    "message": "The goblin throws a dart!"
+  },
+  {
+    "language": "English",
+    "message": "You are hit by a dart."
+  },
+  {
+    "language": "English",
+    "message": "The goblin hits!"
+  },
+  {
+    "language": "English",
+    "message": "You kill the goblin!"
+  },
+  {
+    "language": "English",
+    "message": "There is an open door here."
+  },
+  {
+    "language": "English",
+    "message": "Things that are here:                                          an iron skull cap                                          4 darts"
+  },
+  {
+    "language": "English",
+    "message": "You see here a dart."
+  },
+  {
+    "language": "English",
+    "message": "The little dog picks up a dart."
+  },
+  {
+    "language": "English",
+    "message": "The little dog drops a dart."
+  },
+  {
+    "language": "English",
+    "message": "You find a hidden door."
+  },
+  {
+    "language": "English",
+    "message": "The door resists!"
+  },
+  {
+    "language": "English",
+    "message": "The door opens."
+  },
+  {
+    "language": "English",
+    "message": "You hear some noises in the distance."
+  },
+  {
+    "language": "English",
+    "message": "The fox bites!"
+  },
+  {
+    "language": "English",
+    "message": "You kill the fox!"
+  },
+  {
+    "language": "English",
+    "message": "You swap places with your little dog."
+  },
+  {
+    "language": "English",
+    "message": "The little dog drops an iron skull cap."
+  },
+  {
+    "language": "English",
+    "message": "Things that are here:                                          a yellowish brown gem                                          a mace                          ┌────────┐      a fortune cookie                          │.........░░░░░"
+  },
+  {
+    "language": "English",
+    "message": "Pick up what?"
+  },
+  {
+    "language": "English",
+    "message": "Weapons  ┌────────┐      a - a mace  │.........░░░░░ Comestibles  .........│      b - a fortune cookie  │........│      Gems/Stones  │........■      c - a yellowish brown gem  └────────┘  ░ ░░░░░░░░░░░░░░░░░░░░      ░  ░               ░    ░      ░  ░░░░░░░░░░       ░░░░░░░`    ░  ░       ▒▒           ░ ░░░  ░  @▒[░        ░   ░  ░  ░   ░░ ░  .                      ░   ┌.─■┐  ░   │...│  ░   │x..│  ░   │...│  ░░░░.>..│  └───┘"
+  },
+  {
+    "language": "English",
+    "message": "Pick up what?"
+  },
+  {
+    "language": "English",
+    "message": "Weapons  ┌────────┐      a - a mace  │.........░░░░░ Comestibles  .........│      b + a fortune cookie  │........│      Gems/Stones  │........■      c - a yellowish brown gem  └────────┘  ░ ░░░░░░░░░░░░░░░░░░░░      ░  ░               ░    ░      ░  ░░░░░░░░░░       ░░░░░░░`    ░  ░       ▒▒           ░ ░░░  ░  @▒[░        ░   ░  ░  ░   ░░ ░  .                      ░   ┌.─■┐  ░   │...│  ░   │x..│  ░   │...│  ░░░░.>..│  └───┘"
+  },
+  {
+    "language": "English",
+    "message": "l - a fortune cookie."
+  },
+  {
+    "language": "English",
+    "message": "The door opens."
+  },
+  {
+    "language": "English",
+    "message": "You swap places with your little dog."
+  },
+  {
+    "language": "English",
+    "message": "The door opens."
+  },
+  {
+    "language": "English",
+    "message": "You kill the grid bug!"
+  },
+  {
+    "language": "English",
+    "message": "You kill the jackal!"
+  },
+  {
+    "language": "English",
+    "message": "You swap places with your little dog."
+  },
+  {
+    "language": "English",
+    "message": "You stop."
+  },
+  {
+    "language": "English",
+    "message": "Your little dog is in the way!"
+  },
+  {
+    "language": "English",
+    "message": "The little dog bites the lichen."
+  },
+  {
+    "language": "English",
+    "message": "The lichen is killed!"
+  },
+  {
+    "language": "English",
+    "message": "You see here a lichen corpse."
+  },
+  {
+    "language": "English",
+    "message": "Things that are here:                                          a yellowish brown gem         ┌──────────┐                     a mace         │..........│     ┌────────┐"
+  },
+  {
+    "language": "English",
+    "message": "The little dog drops a lichen corpse."
+  },
+  {
+    "language": "English",
+    "message": "The little dog drops a yellowish brown gem."
+  },
+  {
+    "language": "English",
+    "message": "Things that are here:                                          a yellowish brown gem         ┌──────────┐                     a lichen corpse         │..........│     ┌────────┐"
+  },
+  {
+    "language": "English",
+    "message": "You swap places with your little dog."
+  },
+  {
+    "language": "English",
+    "message": "You see here an iron skull cap."
+  },
+  {
+    "language": "English",
+    "message": "The grid bug bites!"
+  },
+  {
+    "language": "English",
+    "message": "You get zapped!"
+  },
+  {
+    "language": "English",
+    "message": "You kill the grid bug!"
+  },
+  {
+    "language": "English",
+    "message": "You miss the grid bug."
+  },
+  {
+    "language": "English",
+    "message": "The grid bug bites!"
+  },
+  {
+    "language": "English",
+    "message": "You get zapped!"
+  },
+  {
+    "language": "English",
+    "message": "You kill the grid bug!"
+  },
+  {
+    "language": "English",
+    "message": "What do you want to eat?  ┌──────────┐                     Comestibles  │..........│     ┌────────┐      d - 4 uncursed food rations  │..........│     │.........░░░░░ k - 2 melons  │..........│     .........│      l - a fortune cookie  │..........│     │........│      Special  │..........│    ░│........■░     * - (list everything)  └■───────■─┘    ░└────────┘░  ░      ░░      ░░░░░      ░         ░ ░░░░░░░░░░░░░░░░░░░░      ░  ░      ░       ░   ░░░░░░░░░░░░░░░░ ░               ░    ░      ░  ░░░░░░ ░       ░          ░       ░░░░░░░░░[░       ░░░░░░░`    ░  ░░░       ░          ░         ░       ░░           ░ ░░░  ░  ░░░      ░░       ░░░        ░░        ░)*░        ░   ░  ░  ░░░       ░       ░┌────────┐░                     ░   ░░ ░  ┌─────.─.──────┐░      ░░■.........░                     ░   ┌.─■┐  │...............░      ░░│........│                      ░   │..@│  │..............│   ░░░░░░■........│                      ░   │x.d│  │...............░░░░     │........│                      ░   │...│  │..............│         │........│                      ░░░░.>..│  └──────────────┘         └────────┘                          └───┘"
+  },
+  {
+    "language": "English",
+    "message": "This melon is delicious!"
+  },
+  {
+    "language": "English",
+    "message": "There is an open door here."
+  },
+  {
+    "language": "English",
+    "message": "You see here an iron skull cap."
+  },
+  {
+    "language": "English",
+    "message": "You descend the stairs."
+  },
+  {
+    "language": "English",
+    "message": "You swap places with your little dog."
+  },
+  {
+    "language": "English",
+    "message": "You see here 13 gold pieces."
+  },
+  {
+    "language": "English",
+    "message": "$ - 13 gold pieces."
+  },
+  {
+    "language": "English",
+    "message": "You are beginning to feel hungry."
+  },
+  {
+    "language": "English",
+    "message": "You stop."
+  },
+  {
+    "language": "English",
+    "message": "Your little dog is in the way!"
+  },
+  {
+    "language": "English",
+    "message": "You stop."
+  },
+  {
+    "language": "English",
+    "message": "Your little dog is in the way!"
+  },
+  {
+    "language": "English",
+    "message": "The jackal bites!"
+  },
+  {
+    "language": "English",
+    "message": "You miss the jackal."
+  },
+  {
+    "language": "English",
+    "message": "You kill the jackal!"
+  },
+  {
+    "language": "English",
+    "message": "You kill the lichen!"
+  },
+  {
+    "language": "English",
+    "message": "Welcome to experience level 2."
+  },
+  {
+    "language": "English",
+    "message": "You see here a lichen corpse."
+  },
+  {
+    "language": "English",
+    "message": "You see here a tin."
+  },
+  {
+    "language": "English",
+    "message": "n - a tin."
+  },
+  {
+    "language": "English",
+    "message": "You hear someone cursing shoplifters."
+  },
+  {
+    "language": "English",
+    "message": "Things that are here:                                          a gnome corpse                                          8 arrows                                ┌──────┐"
+  },
+  {
+    "language": "English",
+    "message": "Click!"
+  },
+  {
+    "language": "English",
+    "message": "You trigger a rolling boulder trap!"
+  },
+  {
+    "language": "English",
+    "message": "You are hit by a boulder!"
+  },
+  {
+    "language": "English",
+    "message": "The boulder hits the little dog!"
+  },
+  {
+    "language": "English",
+    "message": "The little dog is killed!"
+  },
+  {
+    "language": "English",
+    "message": "What do you want to use or apply?"
+  },
+  {
+    "language": "English",
+    "message": "Weapons  a - a blessed +2 bullwhip (weapon in hand)  Tools  e - a +0 pick-axe (alternate weapon; not wielded)  f - a tinning kit (0:56)  h - an empty uncursed sack  Gems/Stones  g - an uncursed touchstone  Special  * - (list everything)  ┌──────┐   ░            ░░░░░░░░    ░░░░  │....%.│░ ░░                  ┌■───────.───┐  .).....│░░░                   │............│  │......■░░                    .............│  └──────┘░░░░░░░░░░░░░         │........{...│  ░░░░░░░░░░■..%.........│  │............│  └────────────┘"
+  },
+  {
+    "language": "English",
+    "message": "Never mind."
+  },
+  {
+    "language": "English",
+    "message": "You can hear again."
+  },
+  {
+    "language": "English",
+    "message": "You faint from lack of food."
+  },
+  {
+    "language": "English",
+    "message": "You regain consciousness."
+  },
+  {
+    "language": "English",
+    "message": "You can hear again."
+  },
+  {
+    "language": "English",
+    "message": "Things that are here:                                          a pancake                                          3 gold pieces                                ┌──────┐"
+  },
+  {
+    "language": "English",
+    "message": "Coins  $ - 13 gold pieces  Weapons  a - a blessed +2 bullwhip (weapon in hand)  ┌───┐     Armor  │.@..░░░░ b - a blessed +0 leather jacket (being worn)  +.%.│     c - an uncursed +0 fedora (being worn)  │.%.│     Comestibles  └───┘     d - 4 uncursed food rations  k - a melon  l - a fortune cookie  n - a tin  Scrolls  j - a scroll labeled XOR OTA  Potions  i - a white potion  Tools  e - a +0 pick-axe (alternate weapon; not wielded)  f - a tinning kit (0:56)  h - an empty uncursed sack  Gems/Stones  g - an uncursed touchstone  [J the Digger"
+  },
+  {
+    "language": "English",
+    "message": "What do you want to eat?"
+  },
+  {
+    "language": "English",
+    "message": "Comestibles  ┌──────┐  d - 4 uncursed food rations  ┌───┐       │......│  k - a melon  │.@..░░░░░░░■.......░ l - a fortune cookie  +.%.│       │<.....│  n - a tin  │.%.│       └──────┘  Special  └───┘                 * - (list everything)  ░░  ░░░         ░  ░        ░░░░░░  ░░         ░░░░░░░░░░░░░░░  ┌──────┐   ░            ░░░░░░░░    ░░░░  │....%.│░ ░░                  ┌■───────.───┐  .).....│░░░                   │............│  │......■░░                    .............│  └──────┘░░░░░░░░░░░░░         │........{...│  ░░░░░░░░░░■..%.........│  │............│  └────────────┘"
+  },
+  {
+    "language": "English",
+    "message": "Blecch!"
+  },
+  {
+    "language": "English",
+    "message": "Rotten food!"
+  },
+  {
+    "language": "English",
+    "message": "You feel weak now."
+  },
+  {
+    "language": "English",
+    "message": "Coins  $ - 13 gold pieces  Weapons  a - a blessed +2 bullwhip (weapon in hand)  ┌───┐     Armor  │.@..░░░░ b - a blessed +0 leather jacket (being worn)  +.%.│     c - an uncursed +0 fedora (being worn)  │.%.│     Comestibles  └───┘     d - 4 uncursed food rations  l - a fortune cookie  n - a tin  Scrolls  j - a scroll labeled XOR OTA  Potions  i - a white potion  Tools  e - a +0 pick-axe (alternate weapon; not wielded)  f - a tinning kit (0:56)  h - an empty uncursed sack  Gems/Stones  g - an uncursed touchstone"
+  },
+  {
+    "language": "English",
+    "message": "The door resists!"
+  },
+  {
+    "language": "English",
+    "message": "The door opens."
+  },
+  {
+    "language": "English",
+    "message": "Coins  $ - 13 gold pieces  Weapons  a - a blessed +2 bullwhip (weapon in hand)  ┌───┐     Armor  │....░░░░ b - a blessed +0 leather jacket (being worn)  ■@%.│     c - an uncursed +0 fedora (being worn)  │.%.│     Comestibles  └───┘     d - 4 uncursed food rations  l - a fortune cookie  n - a tin  Scrolls  j - a scroll labeled XOR OTA  Potions  i - a white potion  Tools  e - a +0 pick-axe (alternate weapon; not wielded)  f - a tinning kit (0:56)  h - an empty uncursed sack  Gems/Stones  g - an uncursed touchstone"
+  },
+  {
+    "language": "English",
+    "message": "This fortune cookie is delicious!"
+  },
+  {
+    "language": "English",
+    "message": "You only feel hungry now."
+  },
+  {
+    "language": "English",
+    "message": "This cookie has a scrap of paper inside."
+  },
+  {
+    "language": "English",
+    "message": "It reads:"
+  },
+  {
+    "language": "English",
+    "message": "They say that the idea of invisible Nazgul has a certain ring to it."
+  },
+  {
+    "language": "English",
+    "message": "Unknown command ' '."
+  },
+  {
+    "language": "English",
+    "message": "Things that are here:                                          a pancake                                          3 gold pieces                                ┌──────┐"
+  },
+  {
+    "language": "English",
+    "message": "Pick up what?"
+  },
+  {
+    "language": "English",
+    "message": "Coins  ┌──────┐  $ - 3 gold pieces  ┌───┐       │......│  Comestibles  │....░░░░░░░■.......░ a - a pancake  ■.@.│       │<.....│  │.%.│       └──────┘ ░░░░░░   ░  └───┘                ░    ░░░░  ░░░       ░░░░  ░░░         ░  ░        ░░░░░░  ░░         ░░░░░░░░░░░░░░░  ┌──────┐   ░            ░░░░░░░░    ░░░░  │....%.│░ ░░                  ┌■───────.───┐  .).....│░░░                   │............│  │......■░░                    .............│  └──────┘░░░░░░░░░░░░░         │........{...│  ░░░░░░░░░░■..%.........│  │............│  └────────────┘"
+  },
+  {
+    "language": "English",
+    "message": "Pick up what?"
+  },
+  {
+    "language": "English",
+    "message": "Coins  ┌──────┐  $ + 3 gold pieces  ┌───┐       │......│  Comestibles  │....░░░░░░░■.......░ a - a pancake  ■.@.│       │<.....│  │.%.│       └──────┘ ░░░░░░   ░  └───┘                ░    ░░░░  ░░░       ░░░░  ░░░         ░  ░        ░░░░░░  ░░         ░░░░░░░░░░░░░░░  ┌──────┐   ░            ░░░░░░░░    ░░░░  │....%.│░ ░░                  ┌■───────.───┐  .).....│░░░                   │............│  │......■░░                    .............│  └──────┘░░░░░░░░░░░░░         │........{...│  ░░░░░░░░░░■..%.........│  │............│  └────────────┘"
+  },
+  {
+    "language": "English",
+    "message": "Pick up what?"
+  },
+  {
+    "language": "English",
+    "message": "Coins  ┌──────┐  $ + 3 gold pieces  ┌───┐       │......│  Comestibles  │....░░░░░░░■.......░ a + a pancake  ■.@.│       │<.....│  │.%.│       └──────┘ ░░░░░░   ░  └───┘                ░    ░░░░  ░░░       ░░░░  ░░░         ░  ░        ░░░░░░  ░░         ░░░░░░░░░░░░░░░  ┌──────┐   ░            ░░░░░░░░    ░░░░  │....%.│░ ░░                  ┌■───────.───┐  .).....│░░░                   │............│  │......■░░                    .............│  └──────┘░░░░░░░░░░░░░         │........{...│  ░░░░░░░░░░■..%.........│  │............│  └────────────┘"
+  },
+  {
+    "language": "English",
+    "message": "$ - 3 gold pieces.  o - a pancake."
+  },
+  {
+    "language": "English",
+    "message": "You see here a tripe ration."
+  },
+  {
+    "language": "English",
+    "message": "p - a tripe ration."
+  },
+  {
+    "language": "English",
+    "message": "You are beginning to feel weak."
+  },
+  {
+    "language": "English",
+    "message": "Coins  $ - 16 gold pieces  Weapons  a - a blessed +2 bullwhip (weapon in hand)  ┌───┐     Armor  │....░░░░ b - a blessed +0 leather jacket (being worn)  @▒░■...│     c - an uncursed +0 fedora (being worn)  ▒  │...│     Comestibles  └───┘     d - 4 uncursed food rations  n - a tin  o - a pancake  p - a tripe ration  Scrolls  j - a scroll labeled XOR OTA  Potions  i - a white potion  Tools  e - a +0 pick-axe (alternate weapon; not wielded)  f - a tinning kit (0:56)  h - an empty uncursed sack  Gems/Stones  g - an uncursed touchstone  [J the Digger"
+  },
+  {
+    "language": "English",
+    "message": "What do you want to eat?"
+  },
+  {
+    "language": "English",
+    "message": "Comestibles  ┌──────┐  d - 4 uncursed food rations  ┌───┐       │......│  n - a tin  │....░░░░░░░■.......░ o - a pancake  @▒░■...│       │<.....│  p - a tripe ration  ▒  │...│       └──────┘  Special  └───┘                 * - (list everything)  ░░  ░░░         ░  ░        ░░░░░░  ░░         ░░░░░░░░░░░░░░░  ┌──────┐   ░            ░░░░░░░░    ░░░░  │....%.│░ ░░                  ┌■───────.───┐  .).....│░░░                   │............│  │......■░░                    .............│  └──────┘░░░░░░░░░░░░░         │........{...│  ░░░░░░░░░░■..%.........│  │............│  └────────────┘"
+  },
+  {
+    "language": "English",
+    "message": "This pancake is delicious!"
+  },
+  {
+    "language": "English",
+    "message": "You finish eating the pancake."
+  },
+  {
+    "language": "English",
+    "message": "The door resists!"
+  },
+  {
+    "language": "English",
+    "message": "The door opens."
+  },
+  {
+    "language": "English",
+    "message": "You see here a tripe ration."
+  },
+  {
+    "language": "English",
+    "message": "p - a tripe ration."
+  },
+  {
+    "language": "English",
+    "message": "You see here a crude spear."
+  },
+  {
+    "language": "English",
+    "message": "Things that are here:                                          an iron skull cap     ┌─────────┐                          a knife     │.........│                ┌──────┐"
+  },
+  {
+    "language": "English",
+    "message": "You see here a lichen corpse."
+  },
+  {
+    "language": "English",
+    "message": "Coins  $ - 16 gold pieces  ┌─────────┐              Weapons  │.........│              a - a blessed +2 bullwhip (weapon in hand)  │...>.)...│    ┌───┐     Armor  │.........│    │....░░░░ b - a blessed +0 leather jacket (being worn)  │.........│ ░░░■...│     c - an uncursed +0 fedora (being worn)  │.........│ ░  │...│     Comestibles  └──.──────┘ ░  └───┘     d - 4 uncursed food rations  ░░     ░░░            n - a tin  ░     ░              p - 2 tripe rations  ░     ░              Scrolls  ░     ░              j - a scroll labeled XOR OTA  ░░░   ░              Potions  ┌────.──┐░              i - a white potion  │.......■░         ░░░░ Tools  │.......│         ░░    e - a +0 pick-axe (alternate weapon; not wielded)  │........)░[░░░░░░░     f - a tinning kit (0:56)  │.......│               h - an empty uncursed sack  └───────┘               Gems/Stones  g - an uncursed touchstone"
+  },
+  {
+    "language": "English",
+    "message": "What do you want to eat?  ┌─────────┐                          Comestibles  │.........│                ┌──────┐  d - 4 uncursed food rations  │...>.)...│    ┌───┐       │......│  n - a tin  │.........│    │....░░░░░░░■.......░ p - 2 tripe rations  │.........│ ░░░■...│       │<.....│  Special  │.........│ ░  │...│       └──────┘  * - (list everything)  └──.──────┘ ░  └───┘  ░░     ░░░                     ░░░  ░    ░░░░  ░     ░                        ░░░░░░░░    ▒  ░     ░                         ░  ░░░░░░▒@▒░░░  ░     ░                        ░░         ▒▒░░░░░░░░░░░░░  ░░░   ░             ┌──────┐░  ░            ░░░░░░░░    ░░░░  ┌────.──┐░             │....%.│░ ░░                  ┌■───────.───┐  │.......■░         ░░░░.......│░░░                   │............│  │.......│         ░░   │......■░░                    .............│  │........)░[░░░░░░░    └──────┘░░░░░░░░░░░░░         │........{...│  │.......│                                  ░░░░░░░░░░■..%.........│  └───────┘                                            │............│  └────────────┘"
+  },
+  {
+    "language": "English",
+    "message": "Blecch!"
+  },
+  {
+    "language": "English",
+    "message": "Rotten food!"
+  },
+  {
+    "language": "English",
+    "message": "You feel rather light headed."
+  },
+  {
+    "language": "English",
+    "message": "You feel less confused now."
+  },
+  {
+    "language": "English",
+    "message": "The gecko just misses!"
+  },
+  {
+    "language": "English",
+    "message": "You miss the gecko."
+  },
+  {
+    "language": "English",
+    "message": "You kill the gecko!"
+  },
+  {
+    "language": "English",
+    "message": "Coins  $ - 16 gold pieces  ┌─────────┐              Weapons  │.........│              a - a blessed +2 bullwhip (weapon in hand)  │...>.)...│    ┌───┐     Armor  │.........│    │....░░░░ b - a blessed +0 leather jacket (being worn)  │.........│ ░░░■...│     c - an uncursed +0 fedora (being worn)  │.........│ ░  │...│     Comestibles  └──.──────┘ ░  └───┘     d - 4 uncursed food rations  ░░     ░░░            n - a tin  ░     ░              p - a tripe ration  ░     ░              Scrolls  ░     ░              j - a scroll labeled XOR OTA  ░░░   ░              Potions  ┌────.──┐░              i - a white potion  │.......■░         ░░░░ Tools  │.......│         ░░    e - a +0 pick-axe (alternate weapon; not wielded)  │........)░[░░░░░░░     f - a tinning kit (0:56)  │.......│               h - an empty uncursed sack  └───────┘               Gems/Stones  g - an uncursed touchstone"
+  },
+  {
+    "language": "English",
+    "message": "Yak - dog food!"
+  },
+  {
+    "language": "English",
+    "message": "You finish eating the tripe ration."
+  },
+  {
+    "language": "English",
+    "message": "You feel incredibly sick."
+  },
+  {
+    "language": "English",
+    "message": "You feel a bit steadier now."
+  },
+  {
+    "language": "English",
+    "message": "You are about to vomit."
+  },
+  {
+    "language": "English",
+    "message": "You vomit!"
+  },
+  {
+    "language": "English",
+    "message": "You feel less confused now."
+  },
+  {
+    "language": "English",
+    "message": "You can move again."
+  },
+  {
+    "language": "English",
+    "message": "You kill the newt!"
+  },
+  {
+    "language": "English",
+    "message": "You see here an effervescent potion."
+  },
+  {
+    "language": "English",
+    "message": "r - an effervescent potion."
+  },
+  {
+    "language": "English",
+    "message": "You hear the chime of a cash register."
+  },
+  {
+    "language": "English",
+    "message": "The grid bug bites!"
+  },
+  {
+    "language": "English",
+    "message": "You get zapped!"
+  },
+  {
+    "language": "English",
+    "message": "The grid bug bites!"
+  },
+  {
+    "language": "English",
+    "message": "You get zapped!"
+  },
+  {
+    "language": "English",
+    "message": "You miss the grid bug."
+  },
+  {
+    "language": "English",
+    "message": "You hit the grid bug."
+  },
+  {
+    "language": "English",
+    "message": "The grid bug bites!"
+  },
+  {
+    "language": "English",
+    "message": "You get zapped!"
+  },
+  {
+    "language": "English",
+    "message": "You miss the grid bug."
+  },
+  {
+    "language": "English",
+    "message": "You kill the grid bug!"
+  },
+  {
+    "language": "English",
+    "message": "You miss the newt."
+  },
+  {
+    "language": "English",
+    "message": "You kill the newt!"
+  },
+  {
+    "language": "English",
+    "message": "Things that are here:                                          an iron skull cap     ┌─────────┐                          a knife     │.........│                ┌──────┐"
+  },
+  {
+    "language": "English",
+    "message": "You see here a crude dagger."
+  },
+  {
+    "language": "English",
+    "message": "The giant rat bites!"
+  },
+  {
+    "language": "English",
+    "message": "You hit the giant rat."
+  },
+  {
+    "language": "English",
+    "message": "The giant rat bites!"
+  },
+  {
+    "language": "English",
+    "message": "You miss the giant rat."
+  },
+  {
+    "language": "English",
+    "message": "You miss the giant rat."
+  },
+  {
+    "language": "English",
+    "message": "The giant rat bites!"
+  },
+  {
+    "language": "English",
+    "message": "You miss the giant rat."
+  },
+  {
+    "language": "English",
+    "message": "You are beginning to feel hungry."
+  },
+  {
+    "language": "English",
+    "message": "You miss the giant rat."
+  },
+  {
+    "language": "English",
+    "message": "The giant rat bites!"
+  },
+  {
+    "language": "English",
+    "message": "You hit the giant rat."
+  },
+  {
+    "language": "English",
+    "message": "You miss the giant rat."
+  },
+  {
+    "language": "English",
+    "message": "The giant rat bites!"
+  },
+  {
+    "language": "English",
+    "message": "You kill the giant rat!"
+  },
+  {
+    "language": "English",
+    "message": "Coins  $ - 16 gold pieces  ┌─────────┐              Weapons  │.........│              a - a blessed +2 bullwhip (weapon in hand)  │...>.)...│    ┌───┐     Armor  │.........│    │....░░░░ b - a blessed +0 leather jacket (being worn)  │.........│ ░░░■...│     c - an uncursed +0 fedora (being worn)  │.........│ ░  │...│     Comestibles  └──.──────┘ ░  └───┘     d - 4 uncursed food rations  ░░     ░░░            n - a tin  ░     ░              Scrolls  ░     ░              j - a scroll labeled XOR OTA  ░     ░              Potions  ░▒@   ░              i - a white potion  ┌────.──┐░              r - an effervescent potion  │.......■░         ░░░░ Tools  │.......│         ░░    e - a +0 pick-axe (alternate weapon; not wielded)  │........)░[░░░░░░░     f - a tinning kit (0:56)  │.......│               h - an empty uncursed sack  └───────┘               Gems/Stones  g - an uncursed touchstone"
+  },
+  {
+    "language": "English",
+    "message": "What do you want to eat?  ┌─────────┐                          Comestibles  │.........│                ┌──────┐  d - 4 uncursed food rations  │...>.)...│    ┌───┐       │......│  n - a tin  │.........│    │....░░░░░░░■.......░ Special  │.........│ ░░░■...│       │<.....│  * - (list everything)  │.........│ ░  │...│       └──────┘  └──.──────┘ ░  └───┘           ░░   ░    ░░░░  ░░     ░░░                   ░░░░░  ░    ░%░░  ░     ░                        ░░░░░░░░    ░  ░     ░                         ░  ░░░░░░░░░░░░  ░     ░                        ░░         ░░░░░░░░░░░░░░░  ░▒@   ░             ┌──────┐░  ░           ░░░░░░░░░    ░░░░  ┌────.──┐░             │....%.│░ ░░              ░░░ ┌■───────.───┐  │.......■░         ░░░░.......│░░░                 ░ │............│  │.......│         ░░   │......■░░                  ░░.............│  │........)░[░░░░░░░    └──────┘░░░░░░░░░░░░░         │........{...│  │.......│                                  ░░░░░░░░░░■..).........│  └───────┘                                            │............│  └────────────┘"
+  },
+  {
+    "language": "English",
+    "message": "This food really hits the spot!"
+  },
+  {
+    "language": "English",
+    "message": "You finish eating the food ration."
+  },
+  {
+    "language": "English",
+    "message": "You descend the stairs."
+  },
+  {
+    "language": "English",
+    "message": "You see here 6 gold pieces."
+  },
+  {
+    "language": "English",
+    "message": "$ - 6 gold pieces."
+  },
+  {
+    "language": "English",
+    "message": "You destroy the kobold zombie!"
+  },
+  {
+    "language": "English",
+    "message": "You see here 5 gold pieces."
+  },
+  {
+    "language": "English",
+    "message": "$ - 5 gold pieces."
+  },
+  {
+    "language": "English",
+    "message": "You see here a plaid spellbook."
+  },
+  {
+    "language": "English",
+    "message": "t - a plaid spellbook."
+  },
+  {
+    "language": "English",
+    "message": "The door resists!"
+  },
+  {
+    "language": "English",
+    "message": "The door opens."
+  },
+  {
+    "language": "English",
+    "message": "You see here a statue of a red mold."
+  },
+  {
+    "language": "English",
+    "message": "This door is locked."
+  },
+  {
+    "language": "English",
+    "message": "There's some graffiti on the floor here."
+  },
+  {
+    "language": "English",
+    "message": "You read: \"Pclymor hin? a shcpkee?er might rake yo? safer\"."
+  },
+  {
+    "language": "English",
+    "message": "You hear someone cursing shoplifters."
+  },
+  {
+    "language": "English",
+    "message": "You find a hidden door."
+  },
+  {
+    "language": "English",
+    "message": "You hit the shrieker."
+  },
+  {
+    "language": "English",
+    "message": "The shrieker shrieks."
+  },
+  {
+    "language": "English",
+    "message": "You hit the shrieker."
+  },
+  {
+    "language": "English",
+    "message": "You miss the shrieker."
+  },
+  {
+    "language": "English",
+    "message": "You hit the shrieker."
+  },
+  {
+    "language": "English",
+    "message": "You kill the shrieker!"
+  },
+  {
+    "language": "English",
+    "message": "Welcome to experience level 3."
+  }
+]

@@ -1,0 +1,236 @@
+NetHack 英文日本語訳問題集
+==================================================
+NetHack のゲーム中に表示される英文を日本語に訳してください。
+==================================================
+
+【問題】
+
+問1.  You see here a scroll labeled XOR OTA.
+答え：
+
+問2.  The little dog picks up a scroll labeled XOR OTA.
+答え：
+
+問3.  The little dog drops a scroll labeled XOR OTA.
+答え：
+
+問4.  You swap places with your little dog.
+答え：
+
+問5.  You try to move the boulder, but in vain.
+答え：
+
+問6.  You hit the jackal.
+答え：
+
+問7.  You kill the jackal!
+答え：
+
+問8.  The door opens.
+答え：
+
+問9.  The goblin throws a dart!
+答え：
+
+問10. You are hit by a dart.
+答え：
+
+問11. The goblin hits!
+答え：
+
+問12. There is an open door here.
+答え：
+
+問13. You find a hidden door.
+答え：
+
+問14. The door resists!
+答え：
+
+問15. You hear some noises in the distance.
+答え：
+
+問16. You stop.
+答え：
+
+問17. Your little dog is in the way!
+答え：
+
+問18. The little dog bites the lichen.
+答え：
+
+問19. You get zapped!
+答え：
+
+問20. You miss the grid bug.
+答え：
+
+問21. Pick up what?
+答え：
+
+問22. This melon is delicious!
+答え：
+
+問23. You descend the stairs.
+答え：
+
+問24. You are beginning to feel hungry.
+答え：
+
+問25. Welcome to experience level 2.
+答え：
+
+問26. You hear someone cursing shoplifters.
+答え：
+
+問27. You trigger a rolling boulder trap!
+答え：
+
+問28. The boulder hits the little dog!
+答え：
+
+問29. Never mind.
+答え：
+
+問30. You can hear again.
+答え：
+
+問31. You faint from lack of food.
+答え：
+
+問32. You regain consciousness.
+答え：
+
+問33. This fortune cookie is delicious!
+答え：
+
+問34. This cookie has a scrap of paper inside.
+答え：
+
+問35. Blecch!
+答え：
+
+問36. Rotten food!
+答え：
+
+問37. You feel weak now.
+答え：
+
+問38. You feel rather light headed.
+答え：
+
+問39. You feel less confused now.
+答え：
+
+問40. You feel incredibly sick.
+答え：
+
+問41. You feel a bit steadier now.
+答え：
+
+問42. You are about to vomit.
+答え：
+
+問43. You can move again.
+答え：
+
+問44. You hear the chime of a cash register.
+答え：
+
+問45. This food really hits the spot!
+答え：
+
+問46. You finish eating the food ration.
+答え：
+
+問47. You destroy the kobold zombie!
+答え：
+
+問48. This door is locked.
+答え：
+
+問49. There's some graffiti on the floor here.
+答え：
+
+問50. The shrieker shrieks.
+答え：
+
+
+==================================================
+【解答】
+==================================================
+
+問1.  ここに「XOR OTA」と書かれた巻物がある。
+問2.  子犬が「XOR OTA」と書かれた巻物を拾った。
+問3.  子犬が「XOR OTA」と書かれた巻物を落とした。
+問4.  あなたは子犬と場所を入れ替えた。
+問5.  岩を動かそうとしたが、無駄だった。
+問6.  ジャッカルに命中した。
+問7.  ジャッカルを倒した！
+問8.  ドアが開いた。
+問9.  ゴブリンがダートを投げた！
+問10. ダートに当たった。
+問11. ゴブリンの攻撃が当たった！
+問12. ここに開いたドアがある。
+問13. 隠しドアを見つけた。
+問14. ドアが抵抗した！（ドアが開かなかった！）
+問15. 遠くで物音が聞こえる。
+問16. 止まった。
+問17. 子犬が邪魔だ！
+問18. 子犬がライケンに噛み付いた。
+問19. 電撃を受けた！
+問20. グリッドバグへの攻撃が外れた。
+問21. 何を拾いますか？
+問22. このメロンはおいしい！
+問23. 階段を下りた。
+問24. 空腹を感じ始めた。
+問25. 経験レベル2へようこそ。
+問26. 誰かが万引き犯を罵るのが聞こえた。
+問27. 転がる岩のトラップを作動させた！
+問28. 岩が子犬に当たった！
+問29. 気にしないで。（やめた。）
+問30. また聞こえるようになった。
+問31. 食料不足で気絶した。
+問32. 意識を取り戻した。
+問33. このフォーチュンクッキーはおいしい！
+問34. このクッキーの中に紙切れが入っている。
+問35. ぐえっ！（うえっ！）
+問36. 腐った食べ物だ！
+問37. 今は弱くなった気がする。
+問38. やや頭がふらふらする感じがする。
+問39. 混乱が少し治まった。
+問40. ひどく気分が悪い。
+問41. 少し落ち着いてきた。
+問42. 今にも吐きそうだ。
+問43. また動けるようになった。
+問44. レジの音が聞こえる。（ショップが近くにある）
+問45. この食べ物はまさにうってつけだ！（とても満足だ！）
+問46. 食料（レーション）を食べ終えた。
+問47. コボルドゾンビを破壊した！
+問48. このドアには鍵がかかっている。
+問49. ここの床に落書きがある。
+問50. シュリーカーが叫んだ。
+
+==================================================
+【NetHack 用語メモ】
+
+scroll       ：巻物（読むことで効果が発動するアイテム）
+potion       ：薬・ポーション（飲むことで効果が発動するアイテム）
+spellbook    ：魔法書（呪文を覚えるためのアイテム）
+boulder      ：大きな岩
+dart         ：ダート（投擲武器）
+lichen       ：ライケン（地衣類。触れると動けなくなることがある敵）
+grid bug     ：グリッドバグ（電撃ダメージを与える小さな敵）
+jackal       ：ジャッカル（初期階層に出る犬科の敵）
+gecko        ：ヤモリ（トカゲ科の敵）
+newt         ：イモリ（両生類の敵）
+shrieker     ：シュリーカー（叫んで他の敵を呼び寄せるキノコ型の敵）
+kobold zombie：コボルドゾンビ（コボルドのアンデッド）
+tripe ration ：トライプ食料（内臓肉。人間が食べるとたいていひどい目に遭う）
+skull cap    ：スカルキャップ（小さな金属製の帽子型防具）
+tinning kit  ：缶詰キット（死体を缶詰にして保存するための道具）
+pick-axe     ：つるはし（掘削用の道具・武器）
+bullwhip     ：牛追い鞭（Indiana Jones 風の武器）
+touchstone   ：試金石（宝石の真偽を確かめる石）
+food ration  ：食料（一般的な携行食）
+==================================================
